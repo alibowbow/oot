@@ -10,7 +10,9 @@
  *   C-up    ▲   B4     493.88 Hz
  *   C-left  ◀   D5     587.33 Hz
  *
- * Every song below is the exact in-game button sequence.
+ * Each song is the exact in-game button sequence. Every note is written as
+ * [button, beats] so the melody carries rhythm: 0.5 = eighth, 1 = quarter,
+ * 2 = half, 3 = dotted half. `bpm` sets the tempo for the auto-player.
  * ==========================================================================*/
 
 window.OOT = window.OOT || {};
@@ -37,65 +39,65 @@ OOT.STAFF_Y = { A: 65, down: 55, right: 45, up: 40, left: 30 };
 OOT.SONGS = [
   // ---- Core ocarina songs --------------------------------------------------
   {
-    id: 'lullaby', name: "Zelda's Lullaby", nameKo: '젤다의 자장가', group: 'core',
-    notes: ['left', 'up', 'right', 'left', 'up', 'right'],
+    id: 'lullaby', name: "Zelda's Lullaby", nameKo: '젤다의 자장가', group: 'core', bpm: 84,
+    notes: [['left', 1], ['up', 1], ['right', 2], ['left', 1], ['up', 1], ['right', 2]],
     effect: 'Proof of the royal family — opens royal seals and secrets.',
   },
   {
-    id: 'epona', name: "Epona's Song", nameKo: '에포나의 노래', group: 'core',
-    notes: ['up', 'left', 'right', 'up', 'left', 'right'],
+    id: 'epona', name: "Epona's Song", nameKo: '에포나의 노래', group: 'core', bpm: 110,
+    notes: [['up', 2], ['left', 1], ['right', 1], ['up', 2], ['left', 1], ['right', 1]],
     effect: 'Calls the horse Epona to your side.',
   },
   {
-    id: 'saria', name: "Saria's Song", nameKo: '사리아의 노래', group: 'core',
-    notes: ['down', 'right', 'left', 'down', 'right', 'left'],
+    id: 'saria', name: "Saria's Song", nameKo: '사리아의 노래', group: 'core', bpm: 132,
+    notes: [['down', 0.5], ['right', 0.5], ['left', 1], ['down', 0.5], ['right', 0.5], ['left', 1]],
     effect: 'Speak with Saria, and lift weary hearts.',
   },
   {
-    id: 'suns', name: "Sun's Song", nameKo: '태양의 노래', group: 'core',
-    notes: ['right', 'down', 'up', 'right', 'down', 'up'],
+    id: 'suns', name: "Sun's Song", nameKo: '태양의 노래', group: 'core', bpm: 100,
+    notes: [['right', 1], ['down', 1], ['up', 2], ['right', 1], ['down', 1], ['up', 2]],
     effect: 'Turns night to day (and day to night). Freezes ReDeads.',
   },
   {
-    id: 'time', name: 'Song of Time', nameKo: '시간의 노래', group: 'core',
-    notes: ['right', 'A', 'down', 'right', 'A', 'down'],
+    id: 'time', name: 'Song of Time', nameKo: '시간의 노래', group: 'core', bpm: 72,
+    notes: [['right', 2], ['A', 1], ['down', 3], ['right', 2], ['A', 1], ['down', 3]],
     effect: 'Opens the Door of Time and shifts Time Blocks.',
   },
   {
-    id: 'storms', name: 'Song of Storms', nameKo: '폭풍의 노래', group: 'core',
-    notes: ['A', 'down', 'up', 'A', 'down', 'up'],
+    id: 'storms', name: 'Song of Storms', nameKo: '폭풍의 노래', group: 'core', bpm: 120,
+    notes: [['A', 0.5], ['down', 0.5], ['up', 2], ['A', 0.5], ['down', 0.5], ['up', 2]],
     effect: 'Summons a downpour and fills dried-up wells.',
   },
 
   // ---- Warp songs ----------------------------------------------------------
   {
-    id: 'minuet', name: 'Minuet of Forest', nameKo: '숲의 미뉴에트', group: 'warp', accent: '#5cc46a',
-    notes: ['A', 'up', 'left', 'right', 'left', 'right'],
+    id: 'minuet', name: 'Minuet of Forest', nameKo: '숲의 미뉴에트', group: 'warp', accent: '#5cc46a', bpm: 96,
+    notes: [['A', 2], ['up', 1], ['left', 1], ['right', 1], ['left', 1], ['right', 2]],
     effect: 'Warp to the Sacred Forest Meadow (Forest Temple).',
   },
   {
-    id: 'bolero', name: 'Bolero of Fire', nameKo: '불의 볼레로', group: 'warp', accent: '#e9603f',
-    notes: ['down', 'A', 'down', 'A', 'right', 'down', 'right', 'down'],
+    id: 'bolero', name: 'Bolero of Fire', nameKo: '불의 볼레로', group: 'warp', accent: '#e9603f', bpm: 116,
+    notes: [['down', 1], ['A', 1], ['down', 1], ['A', 1], ['right', 1], ['down', 1], ['right', 1], ['down', 2]],
     effect: 'Warp to the Death Mountain Crater (Fire Temple).',
   },
   {
-    id: 'serenade', name: 'Serenade of Water', nameKo: '물의 세레나데', group: 'warp', accent: '#4ea3e8',
-    notes: ['A', 'down', 'right', 'right', 'left'],
+    id: 'serenade', name: 'Serenade of Water', nameKo: '물의 세레나데', group: 'warp', accent: '#4ea3e8', bpm: 84,
+    notes: [['A', 2], ['down', 1], ['right', 1], ['right', 1], ['left', 3]],
     effect: 'Warp to Lake Hylia (Water Temple).',
   },
   {
-    id: 'requiem', name: 'Requiem of Spirit', nameKo: '영혼의 레퀴엠', group: 'warp', accent: '#e8b24e',
-    notes: ['A', 'down', 'A', 'right', 'down', 'A'],
+    id: 'requiem', name: 'Requiem of Spirit', nameKo: '영혼의 레퀴엠', group: 'warp', accent: '#e8b24e', bpm: 80,
+    notes: [['A', 1], ['down', 1], ['A', 2], ['right', 1], ['down', 1], ['A', 2]],
     effect: 'Warp to the Desert Colossus (Spirit Temple).',
   },
   {
-    id: 'nocturne', name: 'Nocturne of Shadow', nameKo: '그림자의 녹턴', group: 'warp', accent: '#9b6fe0',
-    notes: ['left', 'right', 'right', 'A', 'left', 'right', 'down'],
+    id: 'nocturne', name: 'Nocturne of Shadow', nameKo: '그림자의 녹턴', group: 'warp', accent: '#9b6fe0', bpm: 76,
+    notes: [['left', 1], ['right', 1], ['right', 1], ['A', 2], ['left', 1], ['right', 1], ['down', 3]],
     effect: 'Warp to the Kakariko Graveyard (Shadow Temple).',
   },
   {
-    id: 'prelude', name: 'Prelude of Light', nameKo: '빛의 전주곡', group: 'warp', accent: '#f0d860',
-    notes: ['up', 'right', 'up', 'right', 'left', 'up'],
+    id: 'prelude', name: 'Prelude of Light', nameKo: '빛의 전주곡', group: 'warp', accent: '#f0d860', bpm: 92,
+    notes: [['up', 1], ['right', 1], ['up', 1], ['right', 1], ['left', 2], ['up', 2]],
     effect: 'Warp to the Temple of Time.',
   },
 ];

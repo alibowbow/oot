@@ -84,13 +84,11 @@ main { position: relative; z-index: 1; max-width: 1040px; margin: 0 auto; paddin
   display: flex; flex-direction: column; align-items: center; gap: 14px;
 }
 
-.ocarina { width: min(420px, 92%); height: auto; user-select: none; }
-.ocarina .emblem { animation: floaty 5s ease-in-out infinite; }
+.ocarina { width: min(440px, 94%); height: auto; user-select: none; filter: drop-shadow(0 10px 22px rgba(0,0,0,.35)); }
 
-.hole { fill: #0b1d31; stroke: #07111d; stroke-width: 1.5; transition: fill .08s ease, filter .22s ease; }
-.hole.lit { fill: var(--glow, var(--gold)); filter: drop-shadow(0 0 9px var(--glow, var(--gold))); }
-.h-label { font-size: 10px; fill: rgba(220,235,255,.55); text-anchor: middle; pointer-events: none; font-family: var(--ui); }
-.h-label.a { fill: rgba(190,210,255,.7); font-weight: 700; }
+.rim { fill: rgba(0,0,0,.30); }                 /* soft recess under each hole */
+.hole { stroke: rgba(6,16,28,.8); stroke-width: 1; transition: fill .08s ease, filter .22s ease; }
+.hole.lit { fill: var(--glow, var(--gold)); filter: drop-shadow(0 0 11px var(--glow, var(--gold))); }
 
 /* button pad --------------------------------------------------------------- */
 .pad { display: flex; align-items: center; justify-content: center; gap: 30px; flex-wrap: wrap; margin-top: 4px; }
@@ -206,10 +204,14 @@ main { position: relative; z-index: 1; max-width: 1040px; margin: 0 auto; paddin
 .song-card header { display: flex; justify-content: space-between; align-items: baseline; }
 .song-card .title b { font-family: var(--serif); font-size: 1.1rem; color: #2a2110; }
 .song-card .title .ko { display: block; font-size: .78rem; color: #6b5526; margin-top: 1px; }
+.song-card .bpm {
+  font-size: .72rem; color: #6b5526; background: rgba(120,90,30,.12);
+  border: 1px solid rgba(120,90,30,.25); border-radius: 12px; padding: 2px 8px; white-space: nowrap;
+}
 
-.tabs { display: flex; flex-wrap: wrap; gap: 6px; margin: 12px 0 6px; }
+.tabs { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin: 12px 0 6px; }
 .tab {
-  width: 30px; height: 30px; border-radius: 7px; display: grid; place-items: center;
+  height: 30px; min-width: 26px; border-radius: 7px; display: grid; place-items: center;
   font-size: 1rem; color: #2a1f08; background: var(--c); border: 1px solid rgba(0,0,0,.25);
   box-shadow: inset 0 -2px 0 rgba(0,0,0,.18); transition: transform .1s ease, box-shadow .1s ease;
 }

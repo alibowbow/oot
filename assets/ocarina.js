@@ -6,6 +6,12 @@
 
   const { NOTES, NOTE_ORDER, SONGS, STAFF_Y } = window.OOT;
 
+  // Pre-compute the bare button sequence + beat list for each song.
+  SONGS.forEach((s) => {
+    s.ids = s.notes.map((n) => n[0]);
+    s.beats = s.notes.map((n) => n[1]);
+  });
+
   /* ------------------------------------------------------------------ Audio */
   // An ocarina is a Helmholtz resonator: an almost pure tone with a little
   // breath and vibrato. We synthesise that with a sine (+ soft triangle body),
@@ -28,7 +34,7 @@
         this.dry.connect(this.master);
 
         this.wet = ctx.createGain();
-        this.wet.gain.value = 0.28;
+        this.wet.gain.value = 0.26;
         this.reverb = ctx.createConvolver();
         this.reverb.buffer = this._impulse(2.2, 2.4);
         this.reverb.connect(this.wet);
@@ -66,11 +72,12 @@
       const bodyGain = ctx.createGain();
       bodyGain.gain.value = 0.10;
 
-      const lfo = ctx.createOscillator();        // vibrato
+      const lfo = ctx.createOscillator();        // vibrato (eases in)
       lfo.type = 'sine';
       lfo.frequency.value = 5.4;
       const lfoGain = ctx.createGain();
-      lfoGain.gain.value = freq * 0.006;
+      lfoGain.gain.setValueAtTime(0.0001, t);
+      lfoGain.gain.linearRampToValueAtTime(freq * 0.007, t + Math.min(0.25, dur));
       lfo.connect(lfoGain);
       lfoGain.connect(osc.frequency);
       lfoGain.connect(body.frequency);
@@ -81,7 +88,7 @@
       filter.Q.value = 0.6;
 
       const env = ctx.createGain();
-      const peak = 0.6, atk = 0.035, rel = 0.20;
+      const peak = 0.6, atk = 0.035, rel = Math.min(0.22, dur * 0.4);
       env.gain.setValueAtTime(0.0001, t);
       env.gain.exponentialRampToValueAtTime(peak, t + atk);
       env.gain.setValueAtTime(peak, t + Math.max(atk, dur - rel));
@@ -95,12 +102,6 @@
 
       const stop = t + dur + 0.05;
       [osc, body, lfo].forEach((o) => { o.start(t); o.stop(stop); });
-    }
-
-    // bright little "secret discovered" sparkle
-    sparkle() {
-      const seq = [659.25, 783.99, 987.77, 1318.5];
-      seq.forEach((f, i) => setTimeout(() => this.play(f, 0.28), i * 90));
     }
   }
 
@@ -169,8 +170,11 @@
   }
 
   /* ----------------------------------------------------- Song recognition */
+  // Free play only watches the *order* of buttons (rhythm-independent), just
+  // like the game. No sound is added when a melody is recognised — only the
+  // banner + a glow on the matching card.
   const recent = [];
-  const maxLen = Math.max(...SONGS.map((s) => s.notes.length));
+  const maxLen = Math.max(...SONGS.map((s) => s.ids.length));
   let lastDetect = 0;
 
   function detect(id) {
@@ -178,10 +182,10 @@
     if (recent.length > maxLen) recent.shift();
 
     for (const song of SONGS) {
-      const n = song.notes.length;
+      const ids = song.ids, n = ids.length;
       if (recent.length < n) continue;
       const tail = recent.slice(recent.length - n);
-      if (tail.every((v, i) => v === song.notes[i])) {
+      if (tail.every((v, i) => v === ids[i])) {
         const now = Date.now();
         if (now - lastDetect < 900) return;     // debounce
         lastDetect = now;
@@ -193,7 +197,6 @@
   }
 
   function onSongPlayed(song) {
-    synth.sparkle();
     showBanner(song);
     const card = $(`.song-card[data-song="${song.id}"]`);
     if (card) {
@@ -246,6 +249,7 @@
   }
 
   /* -------------------------------------------------------- Auto-play song */
+  // Plays with each song's own tempo + per-note beats, so the rhythm is real.
   let playToken = 0;
   function isPlaying() { return playToken !== 0; }
 
@@ -255,29 +259,27 @@
     clearExpect();
     $$('.song-card').forEach((c) => c.classList.remove('playing'));
     $$('.play-btn').forEach((b) => (b.textContent = '▶ Play'));
+    $$('.learn-btn').forEach((b) => (b.textContent = '✎ Practice'));
+    $$('.snote.on, .tab.on').forEach((e) => e.classList.remove('on'));
   }
 
   async function playSong(song, card) {
     stopAll();
     const token = (playToken = Date.now());
     card.classList.add('playing');
-    const pb = $('.play-btn', card);
-    pb.textContent = '■ Stop';
+    $('.play-btn', card).textContent = '■ Stop';
 
-    const gap = 360;
+    const beatMs = 60000 / song.bpm;
     for (let i = 0; i < song.notes.length; i++) {
-      if (playToken !== token) return;             // stopped/interrupted
-      const id = song.notes[i];
-      const last = i === song.notes.length - 1;
-      trigger(id, { dur: last ? 0.85 : 0.5, record: false });
+      if (playToken !== token) return;             // stopped / interrupted
+      const [id, beats] = song.notes[i];
+      const ms = beats * beatMs;
+      trigger(id, { dur: Math.max(0.18, (ms / 1000) * 0.94), record: false });
       markStaff(card, i);
-      await wait(gap);
+      await wait(ms);
     }
-    await wait(260);
-    if (playToken === token) {
-      stopAll();
-      markStaff(card, -1);
-    }
+    await wait(140);
+    if (playToken === token) { stopAll(); markStaff(card, -1); }
   }
 
   /* -------------------------------------------------------- Practice mode */
@@ -286,25 +288,25 @@
     card.classList.add('playing');
     $('.learn-btn', card).textContent = '✕ Exit';
     practice = { song, card, index: 0 };
-    expect(song.notes[0]);
+    expect(song.ids[0]);
     markStaff(card, 0);
   }
 
   function practiceInput(id) {
     if (!practice) return;
-    const want = practice.song.notes[practice.index];
+    const want = practice.song.ids[practice.index];
     if (id === want) {
       practice.index++;
-      if (practice.index >= practice.song.notes.length) {
+      if (practice.index >= practice.song.ids.length) {
         const song = practice.song, card = practice.card;
         practice = null;
         clearExpect();
         $('.learn-btn', card).textContent = '✎ Practice';
         card.classList.remove('playing');
         markStaff(card, -1);
-        onSongPlayed(song);                          // celebrate!
+        onSongPlayed(song);                          // celebrate (visual only)
       } else {
-        expect(practice.song.notes[practice.index]);
+        expect(practice.song.ids[practice.index]);
         markStaff(practice.card, practice.index);
       }
     } else {
@@ -324,40 +326,56 @@
   const wait = (ms) => new Promise((r) => setTimeout(r, ms));
 
   /* --------------------------------------------------- Render the songbook */
-  function staffSVG(ids) {
-    const startX = 30, dx = 26, H = 86;
-    const W = startX + ids.length * dx + 10;
+  // A single notehead with stem / flag / dot, drawn so the staff shows rhythm.
+  function noteGlyph(cx, cy, beats, color) {
+    const open = beats >= 2;                       // half / dotted-half = hollow
+    const dotted = beats === 0.75 || beats === 1.5 || beats === 3;
+    let g =
+      `<ellipse class="head" cx="${cx}" cy="${cy}" rx="5.6" ry="4.2" ` +
+      `transform="rotate(-20 ${cx} ${cy})" fill="${open ? 'none' : color}" ` +
+      `stroke="${color}" stroke-width="${open ? 1.8 : 0.9}"/>`;
+    const sx = cx + 5, top = cy - 26;              // stem on the right, pointing up
+    g += `<line x1="${sx}" y1="${cy - 0.5}" x2="${sx}" y2="${top}" stroke="${color}" stroke-width="1.7"/>`;
+    if (beats <= 0.75) {                           // eighth-note flag
+      g += `<path d="M${sx},${top} q10,3 6,16 q3,-9 -6,-13 z" fill="${color}"/>`;
+    }
+    if (dotted) g += `<circle cx="${cx + 10}" cy="${cy - 1}" r="1.7" fill="${color}"/>`;
+    return g;
+  }
+
+  function staffSVG(song) {
+    const startX = 34, H = 92, base = 14, scale = 9;
+    const slot = (b) => base + b * scale;          // longer note → more space
+    let x = startX, items = '';
+    song.notes.forEach(([id, beats], i) => {
+      const cx = x + slot(beats) / 2;
+      x += slot(beats);
+      const y = STAFF_Y[id];
+      const color = NOTES[id].color;
+      const ledger = id === 'A' ? `<line class="ledger" x1="${cx - 9}" y1="60" x2="${cx + 9}" y2="60"/>` : '';
+      items +=
+        `<g class="snote" data-i="${i}">${ledger}${noteGlyph(cx, y, beats, color)}` +
+        `<text x="${cx}" y="86" text-anchor="middle" class="s-arrow" fill="${color}">${NOTES[id].arrow}</text></g>`;
+    });
+    const W = Math.round(x + 12);
     let lines = '';
     for (let i = 0; i < 5; i++) {
-      const y = 20 + i * 10;
-      lines += `<line x1="6" y1="${y}" x2="${W - 6}" y2="${y}"/>`;
+      const ly = 20 + i * 10;
+      lines += `<line x1="6" y1="${ly}" x2="${W - 6}" y2="${ly}"/>`;
     }
-    let heads = '';
-    ids.forEach((id, i) => {
-      const x = startX + i * dx + dx / 2;
-      const y = STAFF_Y[id];
-      const c = NOTES[id].color;
-      const ledger = id === 'A' ? `<line class="ledger" x1="${x - 9}" y1="60" x2="${x + 9}" y2="60"/>` : '';
-      heads +=
-        `<g class="snote" data-i="${i}">` +
-        ledger +
-        `<ellipse cx="${x}" cy="${y}" rx="5.4" ry="4.1" fill="${c}" stroke="#14110a" stroke-width="0.8" transform="rotate(-20 ${x} ${y})"/>` +
-        `<text x="${x}" y="82" text-anchor="middle" class="s-arrow" fill="${c}">${NOTES[id].arrow}</text>` +
-        `</g>`;
-    });
     return (
-      `<svg class="staff" viewBox="0 0 ${W} ${H}" role="img" aria-label="Sheet music">` +
-      `<g class="s-lines">${lines}</g>` +
-      `<text x="9" y="55" class="s-clef">𝄞</text>${heads}</svg>`
+      `<svg class="staff" viewBox="0 0 ${W} ${H}" role="img" aria-label="Sheet music with rhythm">` +
+      `<g class="s-lines">${lines}</g><text x="9" y="55" class="s-clef">𝄞</text>${items}</svg>`
     );
   }
 
-  function tabHTML(ids) {
-    return ids
-      .map((id) => {
+  function tabHTML(song) {
+    return song.notes
+      .map(([id, beats]) => {
         const n = NOTES[id];
         const cls = id === 'A' ? 'tab a' : 'tab c';
-        return `<span class="${cls}" style="--c:${n.color}" title="${n.pitch}">${n.arrow}</span>`;
+        const w = Math.round(26 + beats * 7);      // wider chip = longer note
+        return `<span class="${cls}" style="--c:${n.color};width:${w}px" title="${n.pitch} · ${beats} beat">${n.arrow}</span>`;
       })
       .join('');
   }
@@ -388,11 +406,10 @@
         if (song.accent) card.style.setProperty('--accent', song.accent);
 
         card.innerHTML =
-          `<header>` +
-          `<div class="title"><b>${song.name}</b><span class="ko">${song.nameKo}</span></div>` +
-          `</header>` +
-          `<div class="tabs">${tabHTML(song.notes)}</div>` +
-          staffSVG(song.notes) +
+          `<header><div class="title"><b>${song.name}</b><span class="ko">${song.nameKo}</span></div>` +
+          `<span class="bpm">♩=${song.bpm}</span></header>` +
+          `<div class="tabs">${tabHTML(song)}</div>` +
+          staffSVG(song) +
           `<p class="effect">${song.effect}</p>` +
           `<div class="actions">` +
           `<button class="play-btn">▶ Play</button>` +
