@@ -7,8 +7,8 @@
  *   A           D4     293.66 Hz   (blue button)
  *   C-down  ▼   F4     349.23 Hz   (yellow C buttons)
  *   C-right ▶   A4     440.00 Hz
- *   C-up    ▲   B4     493.88 Hz
- *   C-left  ◀   D5     587.33 Hz
+ *   C-left  ◀   B4     493.88 Hz
+ *   C-up    ▲   D5     587.33 Hz   (high D, an octave above A)
  *
  * Each song is the exact in-game button sequence. Every note is written as
  * [button, beats] so the melody carries rhythm: 0.5 = eighth, 1 = quarter,
@@ -25,8 +25,8 @@ OOT.NOTES = {
   A:     { id: 'A',     arrow: 'A', pitch: 'D4', freq: 293.66, color: A_BLUE, code: 'KeyA',       key: 'A' },
   down:  { id: 'down',  arrow: '▼', pitch: 'F4', freq: 349.23, color: C_GOLD, code: 'ArrowDown',  key: '↓' },
   right: { id: 'right', arrow: '▶', pitch: 'A4', freq: 440.00, color: C_GOLD, code: 'ArrowRight', key: '→' },
-  up:    { id: 'up',    arrow: '▲', pitch: 'B4', freq: 493.88, color: C_GOLD, code: 'ArrowUp',    key: '↑' },
-  left:  { id: 'left',  arrow: '◀', pitch: 'D5', freq: 587.33, color: C_GOLD, code: 'ArrowLeft',  key: '←' },
+  left:  { id: 'left',  arrow: '◀', pitch: 'B4', freq: 493.88, color: C_GOLD, code: 'ArrowLeft',  key: '←' },
+  up:    { id: 'up',    arrow: '▲', pitch: 'D5', freq: 587.33, color: C_GOLD, code: 'ArrowUp',    key: '↑' },
 };
 
 // Render / layout order (matches the controller: A then the C diamond)
@@ -34,18 +34,20 @@ OOT.NOTE_ORDER = ['A', 'down', 'right', 'up', 'left'];
 
 // Vertical position of each note's head on a treble staff (5 lines at y=20..60).
 // E4 sits on the bottom line; each diatonic step is 5px.
-OOT.STAFF_Y = { A: 65, down: 55, right: 45, up: 40, left: 30 };
+OOT.STAFF_Y = { A: 65, down: 55, right: 45, left: 40, up: 30 };
 
 OOT.SONGS = [
   // ---- Core ocarina songs --------------------------------------------------
   {
-    id: 'lullaby', name: "Zelda's Lullaby", nameKo: '젤다의 자장가', group: 'core', bpm: 84,
-    notes: [['left', 1], ['up', 1], ['right', 2], ['left', 1], ['up', 1], ['right', 2]],
+    id: 'lullaby', name: "Zelda's Lullaby", nameKo: '젤다의 자장가', group: 'core', bpm: 96,
+    // 3/4 waltz: B (half) · D5 (quarter) · A (held), repeated
+    notes: [['left', 2], ['up', 1], ['right', 3], ['left', 2], ['up', 1], ['right', 3]],
     effect: 'Proof of the royal family — opens royal seals and secrets.',
   },
   {
-    id: 'epona', name: "Epona's Song", nameKo: '에포나의 노래', group: 'core', bpm: 110,
-    notes: [['up', 2], ['left', 1], ['right', 1], ['up', 2], ['left', 1], ['right', 1]],
+    id: 'epona', name: "Epona's Song", nameKo: '에포나의 노래', group: 'core', bpm: 116,
+    // descending D5 · B · A, resolving on a held A
+    notes: [['up', 1], ['left', 1], ['right', 2], ['up', 1], ['left', 1], ['right', 2]],
     effect: 'Calls the horse Epona to your side.',
   },
   {

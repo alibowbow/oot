@@ -28,8 +28,8 @@ touch, or keyboard, complete with sheet music for all 12 melodies.
 | **A** | `A` 키 | D4 |
 | **▼** C-down | `↓` | F4 |
 | **▶** C-right | `→` | A4 |
-| **▲** C-up | `↑` | B4 |
-| **◀** C-left | `←` | D5 |
+| **◀** C-left | `←` | B4 |
+| **▲** C-up | `↑` | D5 (높은 도/re) |
 
 ## 🗺️ 수록곡 (Songs)
 
