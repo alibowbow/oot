@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Ocarina of Time — Play the Songs</title>
+<meta name="description" content="A playable Ocarina of Time web app: perform the songs of Hyrule with mouse, touch, or keyboard, with sheet music for every melody." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="assets/style.css" />
+</head>
+<body>
+  <div class="stars" aria-hidden="true"></div>
+
+  <header class="site-head">
+    <div class="triforce" aria-hidden="true">
+      <span></span><span></span><span></span>
+    </div>
+    <h1>Ocarina of Time</h1>
+    <p class="tagline">시간의 오카리나 · Play the songs of Hyrule</p>
+  </header>
+
+  <main>
+    <!-- ============================== Instrument ============================ -->
+    <section class="instrument" aria-label="Playable ocarina">
+      <!-- The blue Ocarina of Time. Holes glow as their note sounds. -->
+      <svg class="ocarina" viewBox="0 0 360 250" role="img" aria-label="Ocarina of Time">
+        <defs>
+          <radialGradient id="bodyGrad" cx="38%" cy="32%" r="80%">
+            <stop offset="0%" stop-color="#9fdcfb" />
+            <stop offset="42%" stop-color="#42a0db" />
+            <stop offset="100%" stop-color="#1c5687" />
+          </radialGradient>
+          <linearGradient id="goldGrad" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="#ffe9a6" />
+            <stop offset="55%" stop-color="#e9b54a" />
+            <stop offset="100%" stop-color="#9c6e1d" />
+          </linearGradient>
+          <radialGradient id="shine" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stop-color="rgba(255,255,255,.55)" />
+            <stop offset="100%" stop-color="rgba(255,255,255,0)" />
+          </radialGradient>
+        </defs>
+
+        <!-- ground shadow -->
+        <ellipse cx="188" cy="214" rx="118" ry="16" fill="rgba(0,0,0,.35)" />
+
+        <!-- mouthpiece -->
+        <path d="M36 150 Q22 162 34 180 L96 168 Q104 150 92 138 Z"
+              fill="url(#goldGrad)" stroke="#7c5713" stroke-width="2.5" />
+
+        <!-- body -->
+        <ellipse cx="190" cy="118" rx="132" ry="80" fill="url(#bodyGrad)"
+                 stroke="#16456e" stroke-width="3.5" />
+        <ellipse cx="150" cy="86" rx="58" ry="27" fill="url(#shine)" />
+
+        <!-- gold rim around the mouth opening -->
+        <ellipse cx="96" cy="153" rx="13" ry="17" fill="#0d2238"
+                 stroke="url(#goldGrad)" stroke-width="3" />
+
+        <!-- subtle Triforce emblem -->
+        <g class="emblem" transform="translate(243 70)" fill="#ffe9a8" opacity=".55">
+          <polygon points="0,-9 -8,5 8,5" />
+          <polygon points="-9,7 -17,21 -1,21" />
+          <polygon points="9,7 1,21 17,21" />
+        </g>
+
+        <!-- finger holes (data-hole matches a note id) -->
+        <g class="holes">
+          <circle class="hole" data-hole="left"  cx="120" cy="98"  r="11" />
+          <circle class="hole" data-hole="up"    cx="166" cy="84"  r="11" />
+          <circle class="hole" data-hole="right" cx="214" cy="84"  r="11" />
+          <circle class="hole" data-hole="down"  cx="260" cy="98"  r="11" />
+          <circle class="hole" data-hole="A"     cx="176" cy="150" r="12" />
+        </g>
+        <g class="hole-labels" aria-hidden="true">
+          <text x="120" y="102" class="h-label">◀</text>
+          <text x="166" y="88"  class="h-label">▲</text>
+          <text x="214" y="88"  class="h-label">▶</text>
+          <text x="260" y="102" class="h-label">▼</text>
+          <text x="176" y="155" class="h-label a">A</text>
+        </g>
+      </svg>
+
+      <!-- Button pad: C diamond + A button (N64 layout) -->
+      <div class="pad" role="group" aria-label="Ocarina buttons">
+        <div class="cpad">
+          <button class="note-btn c up"    data-note="up"    aria-label="C-up, B4">
+            <span class="arrow">▲</span><span class="key">↑</span></button>
+          <button class="note-btn c left"  data-note="left"  aria-label="C-left, D5">
+            <span class="arrow">◀</span><span class="key">←</span></button>
+          <button class="note-btn c right" data-note="right" aria-label="C-right, A4">
+            <span class="arrow">▶</span><span class="key">→</span></button>
+          <button class="note-btn c down"  data-note="down"  aria-label="C-down, F4">
+            <span class="arrow">▼</span><span class="key">↓</span></button>
+        </div>
+        <button class="note-btn a" data-note="A" aria-label="A, D4">
+          <span class="arrow">A</span><span class="key">A</span></button>
+      </div>
+
+      <!-- live stream of notes played in free play -->
+      <div class="echo-row">
+        <span class="echo-label">♪</span>
+        <div id="echo" class="echo" aria-live="off"></div>
+      </div>
+
+      <div class="controls">
+        <label class="vol">🔊
+          <input id="volume" type="range" min="0" max="1" step="0.01" value="0.8" />
+        </label>
+        <button id="stop-all" class="ghost-btn">■ Stop</button>
+        <p class="hint">Use the <b>arrow keys</b> for the C-buttons and the <b>A</b> key — or tap the pad.</p>
+      </div>
+    </section>
+
+    <!-- floating banner shown when a known song is recognised -->
+    <div id="banner" class="banner" role="status" aria-live="polite"></div>
+
+    <!-- ============================== Songbook ============================== -->
+    <div id="songbook"></div>
+  </main>
+
+  <footer class="site-foot">
+    <p>A fan-made tribute to <i>The Legend of Zelda: Ocarina of Time</i>. Built with the Web Audio API — no plugins, no downloads.</p>
+  </footer>
+
+  <script src="assets/songs.js"></script>
+  <script src="assets/ocarina.js"></script>
+</body>
+</html>
