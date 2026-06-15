@@ -86,9 +86,11 @@ main { position: relative; z-index: 1; max-width: 1040px; margin: 0 auto; paddin
 
 .ocarina { width: min(440px, 94%); height: auto; user-select: none; filter: drop-shadow(0 10px 22px rgba(0,0,0,.35)); }
 
-.rim { fill: rgba(0,0,0,.30); }                 /* soft recess under each hole */
-.hole { stroke: rgba(6,16,28,.8); stroke-width: 1; transition: fill .08s ease, filter .22s ease; }
-.hole.lit { fill: var(--glow, var(--gold)); filter: drop-shadow(0 0 11px var(--glow, var(--gold))); }
+/* .rim fill comes from its SVG gradient (do not override it here) */
+.rim { filter: drop-shadow(0 1px 1.5px rgba(0,0,0,.4)); }   /* bevelled, raised edge */
+.glint { fill: rgba(214,238,255,.55); pointer-events: none; } /* glass highlight in each hole */
+.hole { stroke: rgba(6,16,28,.85); stroke-width: 1; transition: fill .08s ease, filter .22s ease; }
+.hole.lit { fill: var(--glow, var(--gold)); filter: drop-shadow(0 0 12px var(--glow, var(--gold))); }
 
 /* button pad --------------------------------------------------------------- */
 .pad { display: flex; align-items: center; justify-content: center; gap: 30px; flex-wrap: wrap; margin-top: 4px; }
@@ -218,13 +220,15 @@ main { position: relative; z-index: 1; max-width: 1040px; margin: 0 auto; paddin
 .tab.a { color: #fff; }
 .tab.on { transform: translateY(-3px) scale(1.08); box-shadow: 0 0 10px 2px var(--c); }
 
-.staff { width: 100%; height: auto; background: rgba(255,255,255,.45); border-radius: 8px; margin: 4px 0 8px; padding: 2px 0; }
+.staff { width: 100%; height: auto; background: rgba(255,255,255,.5); border-radius: 8px; margin: 4px 0 8px; padding: 3px 0; }
 .staff .s-lines line { stroke: #6b5a33; stroke-width: 1; }
 .staff .ledger { stroke: #6b5a33; stroke-width: 1; }
-.staff .s-clef { font-size: 38px; fill: #4a3c1c; }
+.staff .s-clef { font-size: 40px; fill: #4a3c1c; }
 .staff .s-arrow { font-size: 12px; font-family: var(--ui); }
-.staff .snote ellipse { transition: transform .1s ease; transform-box: fill-box; transform-origin: center; }
-.staff .snote.on ellipse { filter: drop-shadow(0 0 5px var(--accent)); }
+/* note: rotation comes from each ellipse's own SVG transform attribute — do NOT
+   set transform-box/transform-origin here or the heads get mispositioned. */
+.staff .snote .head { transition: filter .12s ease; }
+.staff .snote.on .head { filter: drop-shadow(0 0 5px var(--accent)); }
 .staff .snote.on { animation: notebeat .35s ease; }
 @keyframes notebeat { 50% { opacity: .55; } }
 

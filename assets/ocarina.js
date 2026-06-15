@@ -326,46 +326,76 @@
   const wait = (ms) => new Promise((r) => setTimeout(r, ms));
 
   /* --------------------------------------------------- Render the songbook */
-  // A single notehead with stem / flag / dot, drawn so the staff shows rhythm.
-  function noteGlyph(cx, cy, beats, color) {
-    const open = beats >= 2;                       // half / dotted-half = hollow
-    const dotted = beats === 0.75 || beats === 1.5 || beats === 3;
-    let g =
-      `<ellipse class="head" cx="${cx}" cy="${cy}" rx="5.6" ry="4.2" ` +
-      `transform="rotate(-20 ${cx} ${cy})" fill="${open ? 'none' : color}" ` +
-      `stroke="${color}" stroke-width="${open ? 1.8 : 0.9}"/>`;
-    const sx = cx + 5, top = cy - 26;              // stem on the right, pointing up
-    g += `<line x1="${sx}" y1="${cy - 0.5}" x2="${sx}" y2="${top}" stroke="${color}" stroke-width="1.7"/>`;
-    if (beats <= 0.75) {                           // eighth-note flag
-      g += `<path d="M${sx},${top} q10,3 6,16 q3,-9 -6,-13 z" fill="${color}"/>`;
-    }
-    if (dotted) g += `<circle cx="${cx + 10}" cy="${cy - 1}" r="1.7" fill="${color}"/>`;
-    return g;
-  }
-
+  // Build the staff for a song: real note values (filled/hollow heads, stems,
+  // beamed eighths, dots) on five lines. A fixed width keeps every card's staff
+  // aligned and stops notes/flags from overflowing or overlapping.
   function staffSVG(song) {
-    const startX = 34, H = 92, base = 14, scale = 9;
-    const slot = (b) => base + b * scale;          // longer note → more space
-    let x = startX, items = '';
-    song.notes.forEach(([id, beats], i) => {
+    const startX = 40, W = 344, H = 96, base = 20, scale = 14;
+    const INK = '#403718';                         // neutral stem/beam colour
+    const slot = (b) => base + b * scale;
+
+    // 1) lay out note positions (cx = centre, cy = pitch height)
+    let x = startX;
+    const ns = song.notes.map(([id, beats], i) => {
       const cx = x + slot(beats) / 2;
       x += slot(beats);
-      const y = STAFF_Y[id];
-      const color = NOTES[id].color;
-      const ledger = id === 'A' ? `<line class="ledger" x1="${cx - 9}" y1="60" x2="${cx + 9}" y2="60"/>` : '';
-      items +=
-        `<g class="snote" data-i="${i}">${ledger}${noteGlyph(cx, y, beats, color)}` +
-        `<text x="${cx}" y="86" text-anchor="middle" class="s-arrow" fill="${color}">${NOTES[id].arrow}</text></g>`;
+      return { i, id, beats, cx, cy: STAFF_Y[id], color: NOTES[id].color };
     });
-    const W = Math.round(x + 12);
+
+    // 2) beam consecutive eighth notes; remember each beam's stem-top Y
+    const beamed = new Array(ns.length).fill(false);
+    const beams = [];
+    for (let a = 0; a < ns.length; ) {
+      if (ns[a].beats <= 0.5) {
+        let b = a;
+        while (b + 1 < ns.length && ns[b + 1].beats <= 0.5) b++;
+        if (b > a) {
+          const topY = Math.min(...ns.slice(a, b + 1).map((n) => n.cy)) - 26;
+          for (let k = a; k <= b; k++) { beamed[k] = true; ns[k].beamTop = topY; }
+          beams.push([a, b, topY]);
+        }
+        a = b + 1;
+      } else a++;
+    }
+
+    // 3) note glyphs: stem (+ flag if a lone eighth), notehead, dot, button arrow
+    let items = '';
+    ns.forEach((n, idx) => {
+      const open = n.beats >= 2;                   // half / dotted-half = hollow
+      const dotted = n.beats === 0.75 || n.beats === 1.5 || n.beats === 3;
+      const sx = n.cx + 5;
+      const top = beamed[idx] ? n.beamTop : n.cy - 26;
+      let g = `<g class="snote" data-i="${n.i}">`;
+      if (n.id === 'A') g += `<line class="ledger" x1="${n.cx - 9}" y1="60" x2="${n.cx + 9}" y2="60"/>`;
+      g += `<line x1="${sx}" y1="${n.cy - 0.5}" x2="${sx}" y2="${top}" stroke="${INK}" stroke-width="1.7"/>`;
+      if (!beamed[idx] && n.beats <= 0.75) {
+        g += `<path d="M${sx},${top} q9,3 6,14 q2,-8 -6,-11 z" fill="${INK}"/>`;
+      }
+      g += `<ellipse class="head" cx="${n.cx}" cy="${n.cy}" rx="5.6" ry="4.2" ` +
+           `transform="rotate(-20 ${n.cx} ${n.cy})" fill="${open ? 'none' : n.color}" ` +
+           `stroke="${n.color}" stroke-width="${open ? 1.8 : 0.9}"/>`;
+      if (dotted) g += `<circle cx="${n.cx + 10}" cy="${n.cy - 1}" r="1.7" fill="${n.color}"/>`;
+      g += `<text x="${n.cx}" y="88" text-anchor="middle" class="s-arrow" fill="${n.color}">${NOTES[n.id].arrow}</text></g>`;
+      items += g;
+    });
+
+    // 4) beam crossbars (drawn on top, shared by the run)
+    let beamSVG = '';
+    beams.forEach(([a, b, topY]) => {
+      const x0 = ns[a].cx + 5, x1 = ns[b].cx + 5;
+      beamSVG += `<rect x="${x0}" y="${topY - 1.5}" width="${x1 - x0}" height="3.4" rx="0.6" fill="${INK}"/>`;
+    });
+
+    // 5) five staff lines + treble clef
     let lines = '';
     for (let i = 0; i < 5; i++) {
       const ly = 20 + i * 10;
       lines += `<line x1="6" y1="${ly}" x2="${W - 6}" y2="${ly}"/>`;
     }
     return (
-      `<svg class="staff" viewBox="0 0 ${W} ${H}" role="img" aria-label="Sheet music with rhythm">` +
-      `<g class="s-lines">${lines}</g><text x="9" y="55" class="s-clef">𝄞</text>${items}</svg>`
+      `<svg class="staff" viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet" ` +
+      `role="img" aria-label="Sheet music with rhythm">` +
+      `<g class="s-lines">${lines}</g><text x="9" y="55" class="s-clef">𝄞</text>${items}${beamSVG}</svg>`
     );
   }
 
