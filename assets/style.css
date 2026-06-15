@@ -27,7 +27,14 @@ body {
     radial-gradient(1200px 700px at 50% -10%, #1d3e74 0%, transparent 60%),
     linear-gradient(180deg, var(--night-1) 0%, #070d20 60%, #04060f 100%);
   background-attachment: fixed;
+  /* it's a play surface: stop long-press text selection / copy callouts */
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
 }
+/* keep song text selectable for anyone who wants to copy a tab */
+.song-card .effect, .song-card .title, .site-foot { -webkit-user-select: text; user-select: text; }
 
 /* drifting star field ------------------------------------------------------ */
 .stars {
@@ -108,7 +115,8 @@ main { position: relative; z-index: 1; max-width: 1040px; margin: 0 auto; paddin
   border: none; cursor: pointer; color: #1a1407;
   display: flex; flex-direction: column; align-items: center; justify-content: center;
   font-size: 1.25rem; line-height: 1; transition: transform .08s ease, box-shadow .15s ease, filter .1s ease;
-  -webkit-tap-highlight-color: transparent; touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent; touch-action: none;
+  -webkit-user-select: none; user-select: none; -webkit-touch-callout: none;
 }
 .note-btn .arrow { font-size: 1.3rem; }
 .note-btn .key { font-size: .58rem; opacity: .55; margin-top: 3px; font-family: var(--ui); }
@@ -161,17 +169,17 @@ main { position: relative; z-index: 1; max-width: 1040px; margin: 0 auto; paddin
 .hint { flex-basis: 100%; text-align: center; color: rgba(220,232,255,.6); font-size: .82rem; margin: 4px 0 0; }
 .hint b { color: var(--gold-soft); }
 
-/* recognition banner ------------------------------------------------------- */
+/* recognition banner — a fixed top toast, so it never scrolls the page ------ */
 .banner {
-  position: sticky; top: 12px; z-index: 5; margin: 18px auto 0; max-width: 620px;
+  position: fixed; top: 14px; left: 50%; z-index: 50; width: min(620px, 92vw);
   text-align: center; padding: 14px 20px; border-radius: 14px;
-  background: linear-gradient(180deg, rgba(40,30,8,.96), rgba(24,18,4,.96));
+  background: linear-gradient(180deg, rgba(40,30,8,.97), rgba(24,18,4,.97));
   border: 1px solid var(--gold); color: var(--gold-soft);
-  box-shadow: 0 0 26px rgba(246,198,31,.5);
-  opacity: 0; transform: translateY(-12px) scale(.96); pointer-events: none;
+  box-shadow: 0 10px 34px rgba(0,0,0,.55), 0 0 26px rgba(246,198,31,.45);
+  opacity: 0; transform: translateX(-50%) translateY(-16px) scale(.96); pointer-events: none;
   transition: opacity .35s ease, transform .35s ease;
 }
-.banner.show { opacity: 1; transform: translateY(0) scale(1); }
+.banner.show { opacity: 1; transform: translateX(-50%) translateY(0) scale(1); }
 .banner b { color: #fff; }
 .banner .b-ko { opacity: .8; font-size: .9em; }
 .banner .b-note { color: var(--gold); }

@@ -271,11 +271,12 @@
   }
 
   function onSongPlayed(song) {
+    // Show the fixed top toast only — never scroll the page, so the player
+    // stays on the ocarina while free-playing.
     showBanner(song);
     const card = $(`.song-card[data-song="${song.id}"]`);
     if (card) {
       card.classList.add('discovered');
-      card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
       setTimeout(() => card.classList.remove('discovered'), 2400);
     }
   }
@@ -559,6 +560,10 @@
 
     const stop = $('#stop-all');
     if (stop) stop.addEventListener('click', stopAll);
+
+    // suppress the mobile long-press copy/context menu over the play area
+    const inst = $('.instrument');
+    if (inst) inst.addEventListener('contextmenu', (e) => e.preventDefault());
   }
 
   /* ---------------------------------------------------------------- Start */
