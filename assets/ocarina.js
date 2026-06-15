@@ -17,7 +17,7 @@
   // breath and vibrato. We synthesise that with a sine (+ soft triangle body),
   // an LFO for vibrato, a warm low-pass, and a touch of reverb for ambience.
   class OcarinaSynth {
-    constructor() { this.ctx = null; this.volume = 0.8; }
+    constructor() { this.ctx = null; this.volume = 0.8; this.voices = {}; }
 
     ensure() {
       if (!this.ctx) {
@@ -58,9 +58,11 @@
 
     setVolume(v) { this.volume = v; if (this.master) this.master.gain.value = v; }
 
-    play(freq, dur = 0.62) {
-      const ctx = this.ensure();
-      const t = ctx.currentTime;
+    // Build the oscillator chain for one note (sine + soft triangle body +
+    // eased-in vibrato + warm low-pass), routed dry + reverb. The envelope
+    // starts silent; the caller shapes attack/sustain/release.
+    _voice(freq) {
+      const ctx = this.ctx, t = ctx.currentTime;
 
       const osc = ctx.createOscillator();
       osc.type = 'sine';
@@ -72,12 +74,12 @@
       const bodyGain = ctx.createGain();
       bodyGain.gain.value = 0.10;
 
-      const lfo = ctx.createOscillator();        // vibrato (eases in)
+      const lfo = ctx.createOscillator();        // vibrato eases in
       lfo.type = 'sine';
       lfo.frequency.value = 5.4;
       const lfoGain = ctx.createGain();
       lfoGain.gain.setValueAtTime(0.0001, t);
-      lfoGain.gain.linearRampToValueAtTime(freq * 0.007, t + Math.min(0.25, dur));
+      lfoGain.gain.linearRampToValueAtTime(freq * 0.007, t + 0.25);
       lfo.connect(lfoGain);
       lfoGain.connect(osc.frequency);
       lfoGain.connect(body.frequency);
@@ -88,11 +90,7 @@
       filter.Q.value = 0.6;
 
       const env = ctx.createGain();
-      const peak = 0.6, atk = 0.035, rel = Math.min(0.22, dur * 0.4);
       env.gain.setValueAtTime(0.0001, t);
-      env.gain.exponentialRampToValueAtTime(peak, t + atk);
-      env.gain.setValueAtTime(peak, t + Math.max(atk, dur - rel));
-      env.gain.exponentialRampToValueAtTime(0.0001, t + dur);
 
       osc.connect(filter);
       body.connect(bodyGain).connect(filter);
@@ -100,9 +98,56 @@
       env.connect(this.dry);
       env.connect(this.reverb);
 
-      const stop = t + dur + 0.05;
-      [osc, body, lfo].forEach((o) => { o.start(t); o.stop(stop); });
+      return { oscs: [osc, body, lfo], env };
     }
+
+    // One-shot note of fixed length (auto-player / practice playback).
+    play(freq, dur = 0.62) {
+      const ctx = this.ensure();
+      const t = ctx.currentTime;
+      const v = this._voice(freq);
+      const peak = 0.55, atk = 0.035, rel = Math.min(0.22, dur * 0.4);
+      v.env.gain.exponentialRampToValueAtTime(peak, t + atk);
+      v.env.gain.setValueAtTime(peak, t + Math.max(atk, dur - rel));
+      v.env.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+      const stop = t + dur + 0.05;
+      v.oscs.forEach((o) => { o.start(t); o.stop(stop); });
+    }
+
+    // Press-and-hold: start a note that SUSTAINS until noteOff(id) is called,
+    // so holding a button rings the note for as long as you hold it.
+    noteOn(id, freq) {
+      const ctx = this.ensure();
+      const t = ctx.currentTime;
+      if (this.voices[id]) this._releaseVoice(this.voices[id], 0.03);
+      const v = this._voice(freq);
+      v.env.gain.exponentialRampToValueAtTime(0.5, t + 0.04);    // attack, then hold
+      v.oscs.forEach((o) => o.start(t));
+      v.guard = setTimeout(() => this.noteOff(id), 20000);        // anti-stuck safety net
+      this.voices[id] = v;
+    }
+
+    noteOff(id) {
+      const v = this.voices[id];
+      if (!v) return;
+      this.voices[id] = null;
+      this._releaseVoice(v, 0.24);
+    }
+
+    _releaseVoice(v, rel) {
+      const ctx = this.ctx, t = ctx.currentTime;
+      if (v.guard) { clearTimeout(v.guard); v.guard = null; }
+      const g = v.env.gain;
+      try {
+        if (g.cancelAndHoldAtTime) g.cancelAndHoldAtTime(t);
+        else { g.cancelScheduledValues(t); g.setValueAtTime(Math.max(g.value, 0.0001), t); }
+        g.exponentialRampToValueAtTime(0.0001, t + rel);
+      } catch (e) { /* ignore */ }
+      const stop = t + rel + 0.06;
+      v.oscs.forEach((o) => { try { o.stop(stop); } catch (e) { /* already stopped */ } });
+    }
+
+    allOff() { Object.keys(this.voices).forEach((id) => this.noteOff(id)); }
   }
 
   const synth = new OcarinaSynth();
@@ -123,23 +168,52 @@
 
   /* ------------------------------------------------------- Note triggering */
   let practice = null;         // active practice session, if any
+  const held = new Set();      // note ids currently held down (key / pointer)
 
-  // Play a note + light up the button and the matching ocarina hole.
-  // `record` feeds the free-play song detector; auto-play/practice pass false.
-  function trigger(id, { dur = 0.62, record = true } = {}) {
+  // Press-and-hold: start a sustained note and keep its button + ocarina hole
+  // lit until endNote() is called, so the note rings for as long as you hold.
+  // `record` feeds the free-play song detector (auto-play passes false).
+  function startNote(id, { record = true } = {}) {
+    const note = NOTES[id];
+    if (!note) return;
+    synth.noteOn(id, note.freq);
+    if (buttons[id]) buttons[id].classList.add('active');
+    litOn(holes[id], note.color);
+    if (record) { pushEcho(id); detect(id); }
+    if (practice) practiceInput(id);
+  }
+
+  function endNote(id) {
+    synth.noteOff(id);
+    if (buttons[id]) buttons[id].classList.remove('active');
+    litOff(holes[id]);
+  }
+
+  // One-shot timed note used by the auto-player (button/hole blink and fade).
+  function pulseNote(id, dur) {
     const note = NOTES[id];
     if (!note) return;
     synth.play(note.freq, dur);
-
     flash(buttons[id]);
     glow(holes[id], note.color);
-
-    if (record) {
-      pushEcho(id);
-      detect(id);
-    }
-    if (practice) practiceInput(id);
   }
+
+  // Release everything (safety net for blur / Stop while notes are held).
+  function releaseAllHeld() {
+    held.clear();
+    synth.allOff();
+    NOTE_ORDER.forEach((id) => {
+      if (buttons[id]) buttons[id].classList.remove('active');
+      litOff(holes[id]);
+    });
+  }
+
+  function litOn(hole, color) {
+    if (!hole) return;
+    hole.style.setProperty('--glow', color);
+    hole.classList.add('lit');
+  }
+  function litOff(hole) { if (hole) hole.classList.remove('lit'); }
 
   function flash(btn) {
     if (!btn) return;
@@ -218,26 +292,39 @@
   }
 
   /* ----------------------------------------------------- Input: pad + keys */
+  // Pointer: press to start the note, release to stop it. Pointer capture makes
+  // sure the matching pointerup arrives even if the finger/cursor slides off.
   NOTE_ORDER.forEach((id) => {
     const btn = buttons[id];
     if (!btn) return;
-    btn.addEventListener('pointerdown', (e) => { e.preventDefault(); trigger(id); });
+    btn.addEventListener('pointerdown', (e) => {
+      e.preventDefault();
+      try { btn.setPointerCapture(e.pointerId); } catch (_) { /* ignore */ }
+      if (held.has('p:' + e.pointerId)) return;
+      held.add('p:' + e.pointerId);
+      startNote(id);
+    });
+    const release = (e) => { if (held.delete('p:' + e.pointerId)) endNote(id); };
+    btn.addEventListener('pointerup', release);
+    btn.addEventListener('pointercancel', release);
   });
 
-  const held = new Set();
+  // Keyboard: keydown starts (autorepeat ignored), keyup releases.
   document.addEventListener('keydown', (e) => {
     if (e.repeat) return;
     const id = keyToNote(e);
-    if (!id) return;
-    if (held.has(id)) return;
-    held.add(id);
+    if (!id || held.has('k:' + id)) return;
+    held.add('k:' + id);
     e.preventDefault();
-    trigger(id);
+    startNote(id);
   });
   document.addEventListener('keyup', (e) => {
     const id = keyToNote(e);
-    if (id) held.delete(id);
+    if (id && held.delete('k:' + id)) endNote(id);
   });
+
+  // never leave a note droning if the window loses focus mid-hold
+  window.addEventListener('blur', releaseAllHeld);
 
   function keyToNote(e) {
     if (e.code === 'KeyA') return 'A';
@@ -274,7 +361,7 @@
       if (playToken !== token) return;             // stopped / interrupted
       const [id, beats] = song.notes[i];
       const ms = beats * beatMs;
-      trigger(id, { dur: Math.max(0.18, (ms / 1000) * 0.94), record: false });
+      pulseNote(id, Math.max(0.18, (ms / 1000) * 0.94));
       markStaff(card, i);
       await wait(ms);
     }
