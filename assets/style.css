@@ -91,13 +91,20 @@ main { position: relative; z-index: 1; max-width: 1040px; margin: 0 auto; paddin
   display: flex; flex-direction: column; align-items: center; gap: 14px;
 }
 
-.ocarina { width: min(440px, 94%); height: auto; user-select: none; filter: drop-shadow(0 10px 22px rgba(0,0,0,.35)); }
+.ocarina {
+  width: min(470px, 96%);
+  height: auto;
+  user-select: none;
+  filter:
+    drop-shadow(0 18px 30px rgba(0,0,0,.42))
+    drop-shadow(0 0 18px rgba(63,178,232,.12));
+}
 
 /* .rim fill comes from its SVG gradient (do not override it here) */
-.rim { filter: drop-shadow(0 1px 1.5px rgba(0,0,0,.4)); }   /* bevelled, raised edge */
-.glint { fill: rgba(214,238,255,.55); pointer-events: none; } /* glass highlight in each hole */
-.hole { stroke: rgba(6,16,28,.85); stroke-width: 1; transition: fill .08s ease, filter .22s ease; }
-.hole.lit { fill: var(--glow, var(--gold)); filter: drop-shadow(0 0 12px var(--glow, var(--gold))); }
+.rim { filter: drop-shadow(0 1.5px 1.8px rgba(0,0,0,.48)); }   /* bevelled, raised edge */
+.glint { fill: rgba(235,249,255,.68); pointer-events: none; } /* glass highlight in each hole */
+.hole { stroke: rgba(4,12,22,.9); stroke-width: 1.15; transition: fill .08s ease, filter .22s ease; }
+.hole.lit { fill: var(--glow, var(--gold)); filter: drop-shadow(0 0 15px var(--glow, var(--gold))); }
 
 /* button pad --------------------------------------------------------------- */
 .pad { display: flex; align-items: center; justify-content: center; gap: 30px; flex-wrap: wrap; margin-top: 4px; }
