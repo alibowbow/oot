@@ -27,55 +27,93 @@
       <!-- The blue Ocarina of Time. Holes glow as their note sounds. -->
       <svg class="ocarina" viewBox="0 0 400 290" role="img" aria-label="Ocarina of Time">
         <defs>
-          <radialGradient id="bodyGrad" cx="36%" cy="26%" r="88%">
-            <stop offset="0%"   stop-color="#d6f4ff" />
-            <stop offset="26%"  stop-color="#74c3ef" />
-            <stop offset="64%"  stop-color="#2c84bd" />
-            <stop offset="100%" stop-color="#123f63" />
+          <radialGradient id="bodyGrad" cx="32%" cy="21%" r="94%">
+            <stop offset="0%"   stop-color="#f1fbff" />
+            <stop offset="18%"  stop-color="#9fe0ff" />
+            <stop offset="47%"  stop-color="#2f9ad4" />
+            <stop offset="75%"  stop-color="#125f91" />
+            <stop offset="100%" stop-color="#062744" />
           </radialGradient>
-          <radialGradient id="gloss" cx="50%" cy="50%" r="50%">
-            <stop offset="0%"   stop-color="rgba(255,255,255,.88)" />
-            <stop offset="55%"  stop-color="rgba(255,255,255,.16)" />
+          <radialGradient id="innerBlue" cx="43%" cy="36%" r="80%">
+            <stop offset="0%"   stop-color="rgba(67,183,231,.18)" />
+            <stop offset="62%"  stop-color="rgba(12,83,129,.04)" />
+            <stop offset="100%" stop-color="rgba(1,16,32,.46)" />
+          </radialGradient>
+          <radialGradient id="gloss" cx="38%" cy="38%" r="62%">
+            <stop offset="0%"   stop-color="rgba(255,255,255,.95)" />
+            <stop offset="43%"  stop-color="rgba(255,255,255,.2)" />
             <stop offset="100%" stop-color="rgba(255,255,255,0)" />
           </radialGradient>
+          <linearGradient id="edgeLight" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="rgba(236,251,255,.9)" />
+            <stop offset="45%" stop-color="rgba(115,214,252,.25)" />
+            <stop offset="100%" stop-color="rgba(4,31,56,0)" />
+          </linearGradient>
           <linearGradient id="botShade" x1="0" y1="0" x2="0.3" y2="1">
             <stop offset="0%"   stop-color="rgba(8,28,52,0)" />
-            <stop offset="100%" stop-color="rgba(4,18,38,.66)" />
+            <stop offset="72%"  stop-color="rgba(4,18,38,.48)" />
+            <stop offset="100%" stop-color="rgba(0,7,18,.82)" />
           </linearGradient>
           <linearGradient id="goldGrad" x1="0" y1="0" x2="1" y2="1">
             <stop offset="0%"   stop-color="#fff4cc" />
             <stop offset="40%"  stop-color="#eab646" />
             <stop offset="100%" stop-color="#915f12" />
           </linearGradient>
+          <linearGradient id="goldEdge" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="rgba(255,252,224,.86)" />
+            <stop offset="100%" stop-color="rgba(110,70,14,.55)" />
+          </linearGradient>
           <radialGradient id="holeDepth" cx="50%" cy="32%" r="70%">
-            <stop offset="0%"   stop-color="#214061" />
-            <stop offset="52%"  stop-color="#0a1726" />
+            <stop offset="0%"   stop-color="#315d7c" />
+            <stop offset="42%"  stop-color="#0a1726" />
             <stop offset="100%" stop-color="#01060d" />
           </radialGradient>
           <radialGradient id="rimGrad" cx="38%" cy="28%" r="72%">
-            <stop offset="0%"   stop-color="#bfe2f5" />
-            <stop offset="48%"  stop-color="#4f9bcd" />
-            <stop offset="100%" stop-color="#0d3656" />
+            <stop offset="0%"   stop-color="#e9f8ff" />
+            <stop offset="35%"  stop-color="#68bde8" />
+            <stop offset="70%"  stop-color="#1b6e9e" />
+            <stop offset="100%" stop-color="#082941" />
           </radialGradient>
-          <pattern id="speckle" width="27" height="27" patternUnits="userSpaceOnUse" patternTransform="rotate(9)">
-            <circle cx="5"  cy="7"  r="1.1" fill="rgba(255,255,255,.10)" />
+          <radialGradient id="gemGrad" cx="34%" cy="28%" r="73%">
+            <stop offset="0%" stop-color="#fff9c9" />
+            <stop offset="44%" stop-color="#f2c746" />
+            <stop offset="100%" stop-color="#8b5a0d" />
+          </radialGradient>
+          <pattern id="speckle" width="26" height="26" patternUnits="userSpaceOnUse" patternTransform="rotate(9)">
+            <circle cx="5"  cy="7"  r="1.1" fill="rgba(255,255,255,.12)" />
             <circle cx="18" cy="17" r="0.9" fill="rgba(7,28,52,.13)" />
             <circle cx="23" cy="4"  r="0.7" fill="rgba(255,255,255,.07)" />
             <circle cx="11" cy="22" r="0.8" fill="rgba(255,255,255,.06)" />
+            <path d="M2 19 C8 17, 12 20, 18 18" fill="none" stroke="rgba(255,255,255,.035)" stroke-width="1" />
           </pattern>
           <filter id="softShadow" x="-30%" y="-30%" width="160%" height="160%">
             <feGaussianBlur in="SourceGraphic" stdDeviation="6" />
           </filter>
+          <filter id="ceramicLift" x="-18%" y="-18%" width="136%" height="140%">
+            <feDropShadow dx="0" dy="7" stdDeviation="6" flood-color="#020711" flood-opacity=".42" />
+            <feDropShadow dx="0" dy="-1.3" stdDeviation="1.2" flood-color="#d7f7ff" flood-opacity=".34" />
+          </filter>
+          <filter id="insetHole" x="-45%" y="-45%" width="190%" height="190%">
+            <feDropShadow dx="0" dy="1.8" stdDeviation="1.2" flood-color="#00040a" flood-opacity=".72" />
+            <feDropShadow dx="-1" dy="-1" stdDeviation=".8" flood-color="#bfeeff" flood-opacity=".25" />
+          </filter>
+          <filter id="etchedGlow" x="-35%" y="-35%" width="170%" height="170%">
+            <feDropShadow dx="0" dy="0" stdDeviation="1.2" flood-color="#ffe590" flood-opacity=".45" />
+          </filter>
         </defs>
 
         <!-- cast shadow -->
-        <ellipse cx="220" cy="252" rx="146" ry="20" fill="rgba(0,0,0,.4)" filter="url(#softShadow)" />
+        <ellipse cx="220" cy="253" rx="150" ry="22" fill="rgba(0,0,0,.45)" filter="url(#softShadow)" />
 
         <!-- golden mouthpiece (tucked behind the body) -->
         <path d="M86,150 C54,148 32,156 26,176 C36,192 66,194 90,182 C100,176 100,160 94,152 Z"
               fill="url(#goldGrad)" stroke="#7c5512" stroke-width="2.5" stroke-linejoin="round" />
+        <path d="M86,150 C54,148 32,156 26,176 C36,192 66,194 90,182" fill="none"
+              stroke="url(#goldEdge)" stroke-width="1.5" stroke-linecap="round" opacity=".85" />
         <path d="M40,159 C56,153 74,154 88,160" fill="none" stroke="rgba(255,250,222,.75)"
               stroke-width="2.4" stroke-linecap="round" />
+        <path d="M41,184 C55,189 75,187 88,178" fill="none" stroke="rgba(92,55,8,.38)"
+              stroke-width="2.1" stroke-linecap="round" />
         <path d="M90,150 C95,162 95,172 90,184" fill="none" stroke="rgba(120,82,20,.6)" stroke-width="2" />
         <ellipse cx="30" cy="176" rx="6" ry="8" fill="#06121c" stroke="url(#goldGrad)" stroke-width="2" />
 
@@ -83,51 +121,59 @@
         <path id="ocaBody"
               d="M78,158 C70,118 102,84 152,75 C208,64 272,68 314,99 C354,128 356,176 320,206
                  C281,237 200,241 138,223 C98,211 86,191 78,158 Z"
-              fill="url(#bodyGrad)" stroke="#0f3a5c" stroke-width="3.5" />
+              fill="url(#bodyGrad)" stroke="#0b3658" stroke-width="3.5" filter="url(#ceramicLift)" />
         <clipPath id="bodyClip"><use href="#ocaBody" /></clipPath>
         <g clip-path="url(#bodyClip)">
           <ellipse cx="330" cy="216" rx="180" ry="104" fill="url(#botShade)" />
+          <ellipse cx="212" cy="141" rx="150" ry="82" fill="url(#innerBlue)" />
           <rect x="60" y="68" width="306" height="168" fill="url(#speckle)" />
-          <ellipse cx="150" cy="112" rx="108" ry="63" fill="url(#gloss)" />
-          <ellipse cx="172" cy="92" rx="46" ry="15" fill="#ffffff" opacity=".5"
+          <ellipse cx="149" cy="112" rx="111" ry="60" fill="url(#gloss)" transform="rotate(-8 149 112)" />
+          <ellipse cx="172" cy="92" rx="48" ry="15" fill="#ffffff" opacity=".58"
                    transform="rotate(-12 172 92)" />
           <ellipse cx="134" cy="102" rx="15" ry="6.5" fill="#ffffff" opacity=".7"
                    transform="rotate(-20 134 102)" />
+          <path d="M112,141 C147,113 222,96 290,112 C317,119 337,137 343,158"
+                fill="none" stroke="url(#edgeLight)" stroke-width="1.4" opacity=".7" />
           <!-- top rim light + bottom reflected light -->
-          <path d="M98,88 C156,73 236,72 304,98" fill="none" stroke="rgba(224,246,255,.6)" stroke-width="2.4" />
-          <path d="M150,222 C220,236 290,228 326,200" fill="none" stroke="rgba(168,226,255,.5)" stroke-width="3" />
+          <path d="M98,88 C156,73 236,72 304,98" fill="none" stroke="rgba(224,246,255,.7)" stroke-width="2.4" />
+          <path d="M150,222 C220,236 290,228 326,200" fill="none" stroke="rgba(168,226,255,.55)" stroke-width="3" />
+          <path d="M91,162 C100,203 154,225 236,226" fill="none" stroke="rgba(0,8,22,.18)" stroke-width="5" />
         </g>
+        <use href="#ocaBody" fill="none" stroke="rgba(222,248,255,.58)" stroke-width="1.2" />
 
         <!-- voicing window (sound notch) -->
         <g transform="rotate(-8 114 153)">
           <rect x="103" y="149" width="22" height="8" rx="2.5" fill="#081722" opacity=".72" />
           <rect x="103" y="149" width="22" height="3" rx="1.5" fill="#0c2638" opacity=".6" />
+          <path d="M105,149.8 H122" stroke="rgba(216,245,255,.35)" stroke-width="1" stroke-linecap="round" />
         </g>
 
         <!-- subtly etched Triforce -->
         <g transform="translate(282 94)" fill="#e6f3ff" fill-opacity=".16"
-           stroke="#ffe9a8" stroke-opacity=".22" stroke-width="1">
+           stroke="#ffe9a8" stroke-opacity=".25" stroke-width="1" filter="url(#etchedGlow)">
           <polygon points="0,-11 -10,7 10,7" />
           <polygon points="-11,9 -21,27 -1,27" />
           <polygon points="11,9 1,27 21,27" />
         </g>
+        <circle cx="282" cy="94" r="4.4" fill="url(#gemGrad)" stroke="#80540e" stroke-width="1.1" opacity=".92" />
+        <circle cx="282" cy="94" r="1.3" fill="#fff7cb" opacity=".8" />
 
         <!-- finger holes: bevelled rim + deep hole that glows, with a glass glint -->
         <g class="holes">
           <circle class="rim" cx="152" cy="146" r="12.5" fill="url(#rimGrad)" />
-          <circle class="hole" data-hole="left"  cx="152" cy="146" r="8.6" fill="url(#holeDepth)" />
+          <circle class="hole" data-hole="left"  cx="152" cy="146" r="8.6" fill="url(#holeDepth)" filter="url(#insetHole)" />
           <circle class="glint" cx="148.5" cy="142.5" r="1.7" />
           <circle class="rim" cx="202" cy="120" r="12.5" fill="url(#rimGrad)" />
-          <circle class="hole" data-hole="up"    cx="202" cy="120" r="8.6" fill="url(#holeDepth)" />
+          <circle class="hole" data-hole="up"    cx="202" cy="120" r="8.6" fill="url(#holeDepth)" filter="url(#insetHole)" />
           <circle class="glint" cx="198.5" cy="116.5" r="1.7" />
           <circle class="rim" cx="256" cy="118" r="12.5" fill="url(#rimGrad)" />
-          <circle class="hole" data-hole="right" cx="256" cy="118" r="8.6" fill="url(#holeDepth)" />
+          <circle class="hole" data-hole="right" cx="256" cy="118" r="8.6" fill="url(#holeDepth)" filter="url(#insetHole)" />
           <circle class="glint" cx="252.5" cy="114.5" r="1.7" />
           <circle class="rim" cx="306" cy="142" r="12.5" fill="url(#rimGrad)" />
-          <circle class="hole" data-hole="down"  cx="306" cy="142" r="8.6" fill="url(#holeDepth)" />
+          <circle class="hole" data-hole="down"  cx="306" cy="142" r="8.6" fill="url(#holeDepth)" filter="url(#insetHole)" />
           <circle class="glint" cx="302.5" cy="138.5" r="1.7" />
           <circle class="rim" cx="216" cy="180" r="13.5" fill="url(#rimGrad)" />
-          <circle class="hole" data-hole="A"     cx="216" cy="180" r="9.6" fill="url(#holeDepth)" />
+          <circle class="hole" data-hole="A"     cx="216" cy="180" r="9.6" fill="url(#holeDepth)" filter="url(#insetHole)" />
           <circle class="glint" cx="212" cy="176" r="1.9" />
         </g>
       </svg>
