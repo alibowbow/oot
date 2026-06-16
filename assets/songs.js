@@ -61,7 +61,7 @@ OOT.SONGS = [
     effect: 'Turns night to day (and day to night). Freezes ReDeads.',
   },
   {
-    id: 'time', name: 'Song of Time', nameKo: '시간의 노래', group: 'core', bpm: 72,
+    id: 'time', name: 'Song of Time', nameKo: '시간의 노래', group: 'core', bpm: 144,
     notes: [['right', 2], ['A', 1], ['down', 3], ['right', 2], ['A', 1], ['down', 3]],
     effect: 'Opens the Door of Time and shifts Time Blocks.',
   },
