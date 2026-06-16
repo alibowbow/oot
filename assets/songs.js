@@ -46,8 +46,8 @@ OOT.SONGS = [
   },
   {
     id: 'epona', name: "Epona's Song", nameKo: '에포나의 노래', group: 'core', bpm: 116,
-    // descending D5 · B · A, resolving on a held A
-    notes: [['up', 1], ['left', 1], ['right', 2], ['up', 1], ['left', 1], ['right', 2]],
+    // 1·1·6 rhythm: two eighths then a held (dotted-half) note, repeated
+    notes: [['up', 0.5], ['left', 0.5], ['right', 3], ['up', 0.5], ['left', 0.5], ['right', 3]],
     effect: 'Calls the horse Epona to your side.',
   },
   {
@@ -62,7 +62,8 @@ OOT.SONGS = [
   },
   {
     id: 'time', name: 'Song of Time', nameKo: '시간의 노래', group: 'core', bpm: 144,
-    notes: [['right', 2], ['A', 1], ['down', 3], ['right', 2], ['A', 1], ['down', 3]],
+    // 2·4·2 rhythm: quarter · half · quarter, repeated
+    notes: [['right', 1], ['A', 2], ['down', 1], ['right', 1], ['A', 2], ['down', 1]],
     effect: 'Opens the Door of Time and shifts Time Blocks.',
   },
   {
