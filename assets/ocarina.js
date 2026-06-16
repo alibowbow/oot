@@ -58,47 +58,70 @@
 
     setVolume(v) { this.volume = v; if (this.master) this.master.gain.value = v; }
 
-    // Build the oscillator chain for one note (sine + soft triangle body +
-    // eased-in vibrato + warm low-pass), routed dry + reverb. The envelope
-    // starts silent; the caller shapes attack/sustain/release.
+    // White-noise buffer for the breath component (cached, looped per voice).
+    _noiseBuffer() {
+      if (this._noise) return this._noise;
+      const ctx = this.ctx, len = Math.floor(ctx.sampleRate * 1.5);
+      const buf = ctx.createBuffer(1, len, ctx.sampleRate);
+      const d = buf.getChannelData(0);
+      for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
+      this._noise = buf;
+      return buf;
+    }
+
+    // Build one ocarina voice. A real ocarina is almost a pure tone, so we use
+    // a strong sine fundamental + weak 2nd/3rd harmonics, add band-passed breath
+    // noise with a short "chiff" at the onset, and coherent vibrato via detune.
+    // The envelope starts silent; the caller shapes attack / sustain / release.
     _voice(freq) {
       const ctx = this.ctx, t = ctx.currentTime;
+      const tone = ctx.createGain();
 
-      const osc = ctx.createOscillator();
-      osc.type = 'sine';
-      osc.frequency.value = freq;
+      // harmonic sines: fundamental dominant, faint 2nd + 3rd for a little body
+      const o1 = ctx.createOscillator(); o1.type = 'sine'; o1.frequency.value = freq;
+      const o2 = ctx.createOscillator(); o2.type = 'sine'; o2.frequency.value = freq * 2;
+      const o3 = ctx.createOscillator(); o3.type = 'sine'; o3.frequency.value = freq * 3;
+      const g2 = ctx.createGain(); g2.gain.value = 0.06;
+      const g3 = ctx.createGain(); g3.gain.value = 0.014;
+      o1.connect(tone);
+      o2.connect(g2).connect(tone);
+      o3.connect(g3).connect(tone);
 
-      const body = ctx.createOscillator();      // faint upper body
-      body.type = 'triangle';
-      body.frequency.value = freq;
-      const bodyGain = ctx.createGain();
-      bodyGain.gain.value = 0.10;
+      // vibrato via detune → stays coherent across all harmonics, eases in
+      const lfo = ctx.createOscillator(); lfo.type = 'sine'; lfo.frequency.value = 5.3;
+      const lfoAmt = ctx.createGain();
+      lfoAmt.gain.setValueAtTime(0.0001, t);
+      lfoAmt.gain.linearRampToValueAtTime(7, t + 0.35);          // ~7 cents
+      lfo.connect(lfoAmt);
+      lfoAmt.connect(o1.detune); lfoAmt.connect(o2.detune); lfoAmt.connect(o3.detune);
 
-      const lfo = ctx.createOscillator();        // vibrato eases in
-      lfo.type = 'sine';
-      lfo.frequency.value = 5.4;
-      const lfoGain = ctx.createGain();
-      lfoGain.gain.setValueAtTime(0.0001, t);
-      lfoGain.gain.linearRampToValueAtTime(freq * 0.007, t + 0.25);
-      lfo.connect(lfoGain);
-      lfoGain.connect(osc.frequency);
-      lfoGain.connect(body.frequency);
+      // breath: band-passed noise, a louder "chiff" at the attack, then settling
+      const noise = ctx.createBufferSource();
+      noise.buffer = this._noiseBuffer();
+      noise.loop = true;
+      const bp = ctx.createBiquadFilter();
+      bp.type = 'bandpass';
+      bp.frequency.value = Math.min(freq * 2.2, 5000);
+      bp.Q.value = 0.9;
+      const breath = ctx.createGain();
+      breath.gain.setValueAtTime(0.0001, t);
+      breath.gain.linearRampToValueAtTime(0.09, t + 0.012);      // chiff
+      breath.gain.exponentialRampToValueAtTime(0.035, t + 0.10); // settle to breath
+      noise.connect(bp).connect(breath).connect(tone);
 
+      // warm low-pass + master envelope
       const filter = ctx.createBiquadFilter();
       filter.type = 'lowpass';
-      filter.frequency.value = 2100;
-      filter.Q.value = 0.6;
-
+      filter.frequency.value = 3000;
+      filter.Q.value = 0.5;
       const env = ctx.createGain();
       env.gain.setValueAtTime(0.0001, t);
 
-      osc.connect(filter);
-      body.connect(bodyGain).connect(filter);
-      filter.connect(env);
+      tone.connect(filter).connect(env);
       env.connect(this.dry);
       env.connect(this.reverb);
 
-      return { oscs: [osc, body, lfo], env };
+      return { sources: [o1, o2, o3, lfo, noise], env };
     }
 
     // One-shot note of fixed length (auto-player / practice playback).
@@ -106,12 +129,12 @@
       const ctx = this.ensure();
       const t = ctx.currentTime;
       const v = this._voice(freq);
-      const peak = 0.55, atk = 0.035, rel = Math.min(0.22, dur * 0.4);
+      const peak = 0.5, atk = 0.04, rel = Math.min(0.22, dur * 0.4);
       v.env.gain.exponentialRampToValueAtTime(peak, t + atk);
       v.env.gain.setValueAtTime(peak, t + Math.max(atk, dur - rel));
       v.env.gain.exponentialRampToValueAtTime(0.0001, t + dur);
       const stop = t + dur + 0.05;
-      v.oscs.forEach((o) => { o.start(t); o.stop(stop); });
+      v.sources.forEach((o) => { o.start(t); o.stop(stop); });
     }
 
     // Press-and-hold: start a note that SUSTAINS until noteOff(id) is called,
@@ -121,8 +144,8 @@
       const t = ctx.currentTime;
       if (this.voices[id]) this._releaseVoice(this.voices[id], 0.03);
       const v = this._voice(freq);
-      v.env.gain.exponentialRampToValueAtTime(0.5, t + 0.04);    // attack, then hold
-      v.oscs.forEach((o) => o.start(t));
+      v.env.gain.exponentialRampToValueAtTime(0.46, t + 0.05);   // attack, then hold
+      v.sources.forEach((o) => o.start(t));
       v.guard = setTimeout(() => this.noteOff(id), 20000);        // anti-stuck safety net
       this.voices[id] = v;
     }
@@ -144,7 +167,7 @@
         g.exponentialRampToValueAtTime(0.0001, t + rel);
       } catch (e) { /* ignore */ }
       const stop = t + rel + 0.06;
-      v.oscs.forEach((o) => { try { o.stop(stop); } catch (e) { /* already stopped */ } });
+      v.sources.forEach((o) => { try { o.stop(stop); } catch (e) { /* already stopped */ } });
     }
 
     allOff() { Object.keys(this.voices).forEach((id) => this.noteOff(id)); }
