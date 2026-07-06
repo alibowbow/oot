@@ -36,22 +36,37 @@ body {
 /* keep song text selectable for anyone who wants to copy a tab */
 .song-card .effect, .song-card .title, .site-foot { -webkit-user-select: text; user-select: text; }
 
-/* drifting star field ------------------------------------------------------ */
-.stars {
-  position: fixed; inset: 0; z-index: 0; pointer-events: none;
-  background-image:
-    radial-gradient(1.4px 1.4px at 20% 30%, #fff, transparent),
-    radial-gradient(1.2px 1.2px at 70% 20%, #cfe2ff, transparent),
-    radial-gradient(1.6px 1.6px at 40% 70%, #fff, transparent),
-    radial-gradient(1.1px 1.1px at 85% 60%, #e8f0ff, transparent),
-    radial-gradient(1.3px 1.3px at 10% 80%, #fff, transparent),
-    radial-gradient(1.2px 1.2px at 60% 85%, #cfe2ff, transparent),
-    radial-gradient(1.5px 1.5px at 92% 18%, #fff, transparent),
-    radial-gradient(1.1px 1.1px at 32% 12%, #fff, transparent);
-  opacity: .5;
-  animation: twinkle 7s ease-in-out infinite alternate;
+/* drifting star field — three parallax layers of depth ---------------------- */
+.stars, .stars::before, .stars::after {
+  content: ''; position: fixed; inset: -12% 0; z-index: 0; pointer-events: none;
 }
-@keyframes twinkle { from { opacity: .32; } to { opacity: .6; } }
+.stars {
+  background-image:
+    radial-gradient(1.5px 1.5px at 20% 30%, #fff, transparent),
+    radial-gradient(1.6px 1.6px at 40% 70%, #fff, transparent),
+    radial-gradient(1.5px 1.5px at 92% 18%, #fff, transparent),
+    radial-gradient(1.3px 1.3px at 10% 80%, #fff, transparent);
+  opacity: .55; animation: twinkleA 5s ease-in-out infinite alternate, drift1 90s linear infinite;
+}
+.stars::before {
+  background-image:
+    radial-gradient(1.1px 1.1px at 70% 22%, #cfe2ff, transparent),
+    radial-gradient(1px 1px at 85% 60%, #e8f0ff, transparent),
+    radial-gradient(1.1px 1.1px at 32% 12%, #fff, transparent),
+    radial-gradient(1px 1px at 58% 86%, #cfe2ff, transparent);
+  opacity: .42; animation: twinkleB 8s ease-in-out infinite alternate, drift2 140s linear infinite;
+}
+.stars::after {
+  background:
+    radial-gradient(42% 32% at 24% 26%, rgba(92,124,224,.06), transparent 70%),
+    radial-gradient(46% 36% at 78% 72%, rgba(158,116,64,.05), transparent 70%);
+  animation: drift3 60s ease-in-out infinite alternate;
+}
+@keyframes twinkleA { from { opacity: .3; } to { opacity: .62; } }
+@keyframes twinkleB { from { opacity: .22; } to { opacity: .5; } }
+@keyframes drift1 { from { transform: translateY(0); } to { transform: translateY(-28px); } }
+@keyframes drift2 { from { transform: translateY(0); } to { transform: translateY(-48px); } }
+@keyframes drift3 { from { transform: translate(0,0); } to { transform: translate(18px,-12px); } }
 
 main { position: relative; z-index: 1; max-width: 1040px; margin: 0 auto; padding: 0 18px 60px; }
 
@@ -161,8 +176,9 @@ main { position: relative; z-index: 1; max-width: 1040px; margin: 0 auto; paddin
 /* note echo + controls ----------------------------------------------------- */
 .echo-row { display: flex; align-items: center; gap: 10px; min-height: 30px; }
 .echo-label { color: var(--gold); font-size: 1.1rem; }
-.echo { font-size: 1.35rem; letter-spacing: 4px; min-height: 1.5em; }
-.echo span { animation: pop .18s ease; }
+.echo { font-size: 1.35rem; letter-spacing: 4px; min-height: 1.5em; transition: opacity 1s ease; }
+.echo.fade { opacity: .12; }
+.echo span { animation: pop .18s ease; display: inline-block; }
 @keyframes pop { from { transform: scale(1.6); opacity: 0; } to { transform: scale(1); opacity: 1; } }
 
 .controls { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; justify-content: center; margin-top: 2px; }
@@ -194,11 +210,11 @@ main { position: relative; z-index: 1; max-width: 1040px; margin: 0 auto; paddin
 
 /* songbook ----------------------------------------------------------------- */
 .song-group { margin-top: 38px; }
-.song-group h3 {
+.song-group h2 {
   font-family: var(--serif); color: var(--gold); font-size: 1.5rem; letter-spacing: .04em;
-  border-bottom: 1px solid rgba(246,198,31,.28); padding-bottom: 8px; margin-bottom: 18px;
+  border-bottom: 1px solid rgba(246,198,31,.28); padding-bottom: 8px; margin: 0 0 18px;
 }
-.song-group h3 span { font-family: var(--ui); font-size: .85rem; color: rgba(220,232,255,.5); letter-spacing: 0; margin-left: 8px; }
+.song-group h2 span { font-family: var(--ui); font-size: .85rem; color: rgba(220,232,255,.5); letter-spacing: 0; margin-left: 8px; }
 
 .song-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px; }
 
@@ -218,8 +234,8 @@ main { position: relative; z-index: 1; max-width: 1040px; margin: 0 auto; paddin
   100% { box-shadow: 0 10px 26px rgba(0,0,0,.4); }
 }
 
-.song-card header { display: flex; justify-content: space-between; align-items: baseline; }
-.song-card .title b { font-family: var(--serif); font-size: 1.1rem; color: #2a2110; }
+.song-card header { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+.song-card .title .c-name { font-family: var(--serif); font-weight: 700; font-size: 1.1rem; color: #2a2110; margin: 0; line-height: 1.15; }
 .song-card .title .ko { display: block; font-size: .78rem; color: #6b5526; margin-top: 1px; }
 .song-card .bpm {
   font-size: .72rem; color: #6b5526; background: rgba(120,90,30,.12);
@@ -271,6 +287,163 @@ main { position: relative; z-index: 1; max-width: 1040px; margin: 0 auto; paddin
   .cpad { grid-template-columns: repeat(3, 50px); grid-template-rows: repeat(3, 50px); }
 }
 
+/* Reduced motion: kill idle / parallax / particle / large loops, but KEEP the
+   short (<=~350ms) feedback transitions and give practice static cues so it
+   stays usable. Particle spawns are already suppressed in JS. */
 @media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after { animation: none !important; transition: none !important; }
+  html { scroll-behavior: auto; }
+  .stars, .stars::before, .stars::after, .triforce, .ocarina, .ocarina .gloss-wrap,
+  .song-card.discovered, .note-btn.expect, .note-btn.a.expect,
+  .echo span, .staff .snote.on { animation: none !important; }
+  .note-btn.expect { box-shadow: 0 5px 0 #9c7d10, 0 0 0 5px rgba(255,255,255,.72); }
+  .note-btn.a.expect { box-shadow: 0 6px 0 #2c46a8, 0 0 0 5px rgba(190,212,255,.85); }
+  .note-btn.wrong { box-shadow: 0 5px 0 #9c7d10, 0 0 0 5px rgba(224,72,72,.9) !important; }
+}
+
+/* ============================ quality upgrade ============================== */
+
+/* accessibility: skip link + screen-reader-only + visible focus ------------- */
+.sr-only {
+  position: absolute !important; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0;
+}
+.skip-link {
+  position: fixed; top: -60px; left: 12px; z-index: 100;
+  background: var(--gold); color: #1a1407; padding: 10px 16px;
+  border-radius: 0 0 8px 8px; font-weight: 700; text-decoration: none; transition: top .2s ease;
+}
+.skip-link:focus { top: 0; }
+:focus-visible { outline: 2px solid var(--gold-soft); outline-offset: 2px; }
+.note-btn:focus-visible { outline: 3px solid #17120a; outline-offset: 2px;
+  box-shadow: 0 5px 0 #9c7d10, 0 8px 16px rgba(0,0,0,.4), 0 0 0 6px rgba(234,243,255,.92); }
+.note-btn.a:focus-visible { box-shadow: 0 6px 0 #2c46a8, 0 9px 18px rgba(0,0,0,.45), 0 0 0 6px rgba(234,243,255,.92); }
+.actions button:focus-visible, .play-btn:focus-visible, .learn-btn:focus-visible {
+  outline: 3px solid #3a2d10; outline-offset: 2px; }
+
+/* the instrument's own holes are playable ----------------------------------- */
+.hit { fill: transparent; cursor: pointer; touch-action: none; }
+.ocarina { animation: ocaFloat 6s ease-in-out infinite; }
+@keyframes ocaFloat { 0%,100% { transform: translateY(0) rotate(0deg); } 50% { transform: translateY(-5px) rotate(.4deg); } }
+
+/* lit hole ignites with the note's attack, then holds its glow -------------- */
+.hole.lit {
+  filter: drop-shadow(0 0 6px var(--glow, var(--gold))) drop-shadow(0 0 16px var(--glow, var(--gold)));
+  animation: holeIgnite .2s ease-out;
+}
+@keyframes holeIgnite {
+  0%   { filter: drop-shadow(0 0 2px var(--glow)); }
+  55%  { filter: drop-shadow(0 0 11px var(--glow)) drop-shadow(0 0 28px var(--glow)); }
+}
+
+/* breath motes rising off the instrument ------------------------------------ */
+.instrument { position: relative; }
+.motes { position: absolute; inset: 0; overflow: hidden; pointer-events: none; z-index: 2; }
+.mote {
+  position: absolute; top: 34%; width: 6px; height: 6px; border-radius: 50%;
+  background: var(--c); box-shadow: 0 0 6px var(--c); animation: mote .85s ease-out forwards;
+}
+@keyframes mote {
+  0%   { opacity: .9; transform: translate(0,0) scale(1); }
+  100% { opacity: 0;  transform: translate(var(--dx,0), -62px) scale(.4); }
+}
+
+/* mute / volume / tempo controls -------------------------------------------- */
+.icon-btn {
+  background: transparent; border: 1px solid rgba(246,198,31,.4); color: var(--gold-soft);
+  width: 38px; height: 34px; border-radius: 9px; cursor: pointer; display: grid; place-items: center; transition: .15s;
+}
+.icon-btn:hover { background: rgba(246,198,31,.12); color: #fff; }
+.icon-btn.muted { color: #cf7d4c; }
+.icon-btn .wave { transition: opacity .15s ease; }
+.icon-btn.muted .wave { opacity: 0; }
+.icon-btn.muted .slash { opacity: 1; }
+.vol-slider {
+  -webkit-appearance: none; appearance: none; width: 130px; height: 6px; border-radius: 4px;
+  background: linear-gradient(#3a2f14, #241d0f); box-shadow: inset 0 1px 2px rgba(0,0,0,.6); cursor: pointer;
+}
+.vol-slider::-webkit-slider-thumb {
+  -webkit-appearance: none; width: 16px; height: 16px; border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #fff2b0, var(--gold) 70%);
+  box-shadow: 0 1px 3px rgba(0,0,0,.6); border: 1px solid #7a5c10;
+}
+.vol-slider::-moz-range-thumb {
+  width: 16px; height: 16px; border-radius: 50%; border: 1px solid #7a5c10;
+  background: radial-gradient(circle at 35% 30%, #fff2b0, var(--gold) 70%);
+}
+.tempo { display: inline-flex; border: 1px solid rgba(246,198,31,.35); border-radius: 9px; overflow: hidden; }
+.tempo button {
+  background: transparent; color: var(--gold-soft); border: none; padding: 6px 10px;
+  font-size: .78rem; cursor: pointer; font-family: var(--ui); transition: .12s;
+}
+.tempo button + button { border-left: 1px solid rgba(246,198,31,.25); }
+.tempo button:hover { background: rgba(246,198,31,.1); }
+.tempo button.on { background: rgba(246,198,31,.85); color: #1a1407; font-weight: 700; }
+
+/* header collection tally --------------------------------------------------- */
+.tally-line { margin: 8px 0 0; }
+.tally-badge {
+  display: inline-block; font-size: .8rem; color: var(--gold-soft);
+  background: rgba(246,198,31,.1); border: 1px solid rgba(246,198,31,.3);
+  border-radius: 14px; padding: 3px 12px;
+}
+#tally { font-weight: 700; color: var(--gold); }
+
+/* a learned song keeps a small gold Triforce seal + steady accent glow ------ */
+.song-card.learned { box-shadow: 0 10px 26px rgba(0,0,0,.4), inset 0 0 0 1px rgba(246,198,31,.4); }
+.song-card.learned::after {
+  content: '▲'; position: absolute; top: 9px; right: 12px; font-size: .82rem; color: #b8901f;
+  text-shadow: 0 0 7px rgba(246,198,31,.8); pointer-events: none;
+}
+.note-btn.wrong { box-shadow: 0 5px 0 #9c7d10, 0 0 0 5px rgba(224,72,72,.85); }
+.note-btn.a.wrong { box-shadow: 0 6px 0 #2c46a8, 0 0 0 5px rgba(224,72,72,.85); }
+
+/* ---- world reactions: songs make Hyrule respond (visual only) ---- */
+.sky-day {
+  position: fixed; inset: 0; z-index: 0; pointer-events: none; opacity: 0; transition: opacity .9s ease;
+  background:
+    radial-gradient(120% 80% at 78% 6%, rgba(255,248,214,.95), rgba(255,214,140,.55) 20%, transparent 44%),
+    linear-gradient(180deg, #7cc6ff 0%, #b6e2ff 55%, #e7f5ff 100%);
+}
+body.daytime .sky-day { opacity: 1; }
+body.raining::before {
+  content: ''; position: fixed; inset: 0; z-index: 39; pointer-events: none; opacity: .55;
+  background-image: repeating-linear-gradient(100deg, rgba(200,225,255,.2) 0 1px, transparent 1px 9px);
+  animation: rain .5s linear infinite;
+}
+@keyframes rain { to { background-position: -42px 210px; } }
+
+.fx { position: fixed; inset: 0; z-index: 40; pointer-events: none; overflow: hidden; }
+.fx.vignette::after { content: ''; position: absolute; inset: 0; box-shadow: inset 0 0 180px 55px var(--fx, var(--gold)); animation: vignette .5s ease-out; }
+@keyframes vignette { 0%{opacity:0} 40%{opacity:.55} 100%{opacity:0} }
+.pillar {
+  position: absolute; left: 50%; top: 0; bottom: 0; width: 170px; transform: translateX(-50%);
+  background: linear-gradient(to top, transparent, var(--fx) 42%, transparent); filter: blur(7px);
+  animation: pillar 1.05s ease-out forwards;
+}
+@keyframes pillar {
+  0%   { opacity: 0; transform: translateX(-50%) scaleY(.6); }
+  30%  { opacity: .5; }
+  100% { opacity: 0; transform: translateX(-50%) scaleY(1.12); }
+}
+.spark {
+  position: absolute; left: 50%; top: 40%; width: 7px; height: 7px; border-radius: 50%;
+  background: var(--fx); box-shadow: 0 0 8px var(--fx); animation: spark 1s ease-out forwards;
+}
+@keyframes spark {
+  0%   { opacity: 1; transform: translate(-50%,-50%) scale(1); }
+  100% { opacity: 0; transform: translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))) scale(.3); }
+}
+.lightning { position: absolute; inset: 0; background: rgba(220,235,255,.6); animation: lightning .6s ease-out forwards; }
+@keyframes lightning { 0%{opacity:0} 8%{opacity:.75} 16%{opacity:.12} 26%{opacity:.55} 100%{opacity:0} }
+.triforce.flare { animation: triFlare .85s ease-out; }
+@keyframes triFlare {
+  0%   { filter: drop-shadow(0 0 10px rgba(246,198,31,.6)); transform: scale(1); }
+  40%  { filter: drop-shadow(0 0 26px rgba(255,232,140,1)); transform: scale(1.16); }
+  100% { filter: drop-shadow(0 0 10px rgba(246,198,31,.6)); transform: scale(1); }
+}
+
+/* mobile perf: no fixed-attachment repaint, no heavy blur --------------------- */
+@media (max-width: 700px) {
+  body { background-attachment: scroll; }
+  .instrument { backdrop-filter: none; }
 }

@@ -5,20 +5,23 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Ocarina of Time — Play the Songs</title>
 <meta name="description" content="A playable Ocarina of Time web app: perform the songs of Hyrule with mouse, touch, or keyboard, with sheet music for every melody." />
-<link rel="preconnect" href="https://fonts.googleapis.com" />
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&display=swap" rel="stylesheet" />
+<meta name="theme-color" content="#0a1430" />
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2032%2032'%3E%3Crect%20width='32'%20height='32'%20rx='6'%20fill='%230a1430'/%3E%3Cg%20fill='%23f6c61f'%3E%3Cpolygon%20points='16,5%2011,14%2021,14'/%3E%3Cpolygon%20points='10,16%205,25%2015,25'/%3E%3Cpolygon%20points='22,16%2017,25%2027,25'/%3E%3C/g%3E%3C/svg%3E" />
 <link rel="stylesheet" href="assets/style.css" />
 </head>
 <body>
+  <a class="skip-link" href="#songbook">Skip to the song book</a>
   <div class="stars" aria-hidden="true"></div>
+  <div class="sky-day" aria-hidden="true"></div>
+  <div class="fx" aria-hidden="true"></div>
 
   <header class="site-head">
     <div class="triforce" aria-hidden="true">
       <span></span><span></span><span></span>
     </div>
     <h1>Ocarina of Time</h1>
-    <p class="tagline">시간의 오카리나 · Play the songs of Hyrule</p>
+    <p class="tagline"><span lang="ko">시간의 오카리나</span> · Play the songs of Hyrule</p>
+    <p class="tally-line"><span class="tally-badge"><span id="tally">0 / 12</span> songs learned</span></p>
   </header>
 
   <main>
@@ -176,6 +179,15 @@
           <circle class="hole" data-hole="A"     cx="216" cy="180" r="9.6" fill="url(#holeDepth)" filter="url(#insetHole)" />
           <circle class="glint" cx="212" cy="176" r="1.9" />
         </g>
+
+        <!-- transparent, generous hit targets so the instrument itself plays -->
+        <g class="hole-hits" aria-hidden="true">
+          <circle class="hit" data-hole="left"  cx="152" cy="146" r="23" />
+          <circle class="hit" data-hole="up"    cx="202" cy="120" r="23" />
+          <circle class="hit" data-hole="right" cx="256" cy="118" r="23" />
+          <circle class="hit" data-hole="down"  cx="306" cy="142" r="23" />
+          <circle class="hit" data-hole="A"     cx="216" cy="180" r="25" />
+        </g>
       </svg>
 
       <!-- Button pad: C diamond + A button (N64 layout) -->
@@ -201,12 +213,23 @@
       </div>
 
       <div class="controls">
-        <label class="vol">🔊
-          <input id="volume" type="range" min="0" max="1" step="0.01" value="0.8" />
-        </label>
+        <button id="mute-btn" class="icon-btn" aria-label="Mute" aria-pressed="false" title="Mute / unmute">
+          <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
+            <path d="M4 9v6h4l5 4V5L8 9H4z" fill="currentColor" />
+            <path class="wave" d="M15.5 8.5a4.2 4.2 0 0 1 0 7" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
+            <line class="slash" x1="3.5" y1="3.5" x2="20.5" y2="20.5" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" opacity="0" />
+          </svg>
+        </button>
+        <input id="volume" class="vol-slider" type="range" min="0" max="1" step="0.01" value="0.85" aria-label="Volume" />
+        <div class="tempo" role="group" aria-label="Playback speed">
+          <button type="button" data-rate="0.5">0.5×</button>
+          <button type="button" data-rate="0.75">0.75×</button>
+          <button type="button" data-rate="1" class="on" aria-pressed="true">1×</button>
+        </div>
         <button id="stop-all" class="ghost-btn">■ Stop</button>
-        <p class="hint"><b>Hold</b> a button (or key) to sustain a note for as long as you like. Keys: <b>arrow keys</b> = C-buttons, <b>A</b> = A.</p>
+        <p class="hint"><b>Hold</b> a button, key, or the ocarina's own holes to sustain a note. Keys: <b>arrow keys</b> = C-buttons, <b>A</b> = A.</p>
       </div>
+      <div id="practice-status" class="sr-only" role="status" aria-live="assertive"></div>
     </section>
 
     <!-- floating banner shown when a known song is recognised -->
