@@ -39,7 +39,7 @@ OOT.STAFF_Y = { A: 65, down: 55, right: 45, left: 40, up: 30 };
 OOT.SONGS = [
   // ---- Core ocarina songs --------------------------------------------------
   {
-    id: 'lullaby', name: "Zelda's Lullaby", nameKo: '젤다의 자장가', group: 'core', bpm: 96,
+    id: 'lullaby', name: "Zelda's Lullaby", nameKo: '젤다의 자장가', group: 'core', bpm: 120,
     // 3/4 waltz: B (half) · D5 (quarter) · A (held), repeated
     notes: [['left', 2], ['up', 1], ['right', 3], ['left', 2], ['up', 1], ['right', 3]],
     effect: 'Proof of the royal family — opens royal seals and secrets.',
@@ -56,7 +56,7 @@ OOT.SONGS = [
     effect: 'Speak with Saria, and lift weary hearts.',
   },
   {
-    id: 'suns', name: "Sun's Song", nameKo: '태양의 노래', group: 'core', bpm: 100,
+    id: 'suns', name: "Sun's Song", nameKo: '태양의 노래', group: 'core', bpm: 114,
     notes: [['right', 1], ['down', 1], ['up', 2], ['right', 1], ['down', 1], ['up', 2]],
     effect: 'Turns night to day (and day to night). Freezes ReDeads.',
   },
@@ -67,14 +67,14 @@ OOT.SONGS = [
     effect: 'Opens the Door of Time and shifts Time Blocks.',
   },
   {
-    id: 'storms', name: 'Song of Storms', nameKo: '폭풍의 노래', group: 'core', bpm: 120,
+    id: 'storms', name: 'Song of Storms', nameKo: '폭풍의 노래', group: 'core', bpm: 138,
     notes: [['A', 0.5], ['down', 0.5], ['up', 2], ['A', 0.5], ['down', 0.5], ['up', 2]],
     effect: 'Summons a downpour and fills dried-up wells.',
   },
 
   // ---- Warp songs ----------------------------------------------------------
   {
-    id: 'minuet', name: 'Minuet of Forest', nameKo: '숲의 미뉴에트', group: 'warp', accent: '#5cc46a', bpm: 96,
+    id: 'minuet', name: 'Minuet of Forest', nameKo: '숲의 미뉴에트', group: 'warp', accent: '#5cc46a', bpm: 112,
     notes: [['A', 2], ['up', 1], ['left', 1], ['right', 1], ['left', 1], ['right', 2]],
     effect: 'Warp to the Sacred Forest Meadow (Forest Temple).',
   },
@@ -84,22 +84,22 @@ OOT.SONGS = [
     effect: 'Warp to the Death Mountain Crater (Fire Temple).',
   },
   {
-    id: 'serenade', name: 'Serenade of Water', nameKo: '물의 세레나데', group: 'warp', accent: '#4ea3e8', bpm: 84,
+    id: 'serenade', name: 'Serenade of Water', nameKo: '물의 세레나데', group: 'warp', accent: '#4ea3e8', bpm: 106,
     notes: [['A', 2], ['down', 1], ['right', 1], ['right', 1], ['left', 3]],
     effect: 'Warp to Lake Hylia (Water Temple).',
   },
   {
-    id: 'requiem', name: 'Requiem of Spirit', nameKo: '영혼의 레퀴엠', group: 'warp', accent: '#e8b24e', bpm: 80,
+    id: 'requiem', name: 'Requiem of Spirit', nameKo: '영혼의 레퀴엠', group: 'warp', accent: '#e8b24e', bpm: 104,
     notes: [['A', 1], ['down', 1], ['A', 2], ['right', 1], ['down', 1], ['A', 2]],
     effect: 'Warp to the Desert Colossus (Spirit Temple).',
   },
   {
-    id: 'nocturne', name: 'Nocturne of Shadow', nameKo: '그림자의 녹턴', group: 'warp', accent: '#9b6fe0', bpm: 76,
+    id: 'nocturne', name: 'Nocturne of Shadow', nameKo: '그림자의 녹턴', group: 'warp', accent: '#9b6fe0', bpm: 100,
     notes: [['left', 1], ['right', 1], ['right', 1], ['A', 2], ['left', 1], ['right', 1], ['down', 3]],
     effect: 'Warp to the Kakariko Graveyard (Shadow Temple).',
   },
   {
-    id: 'prelude', name: 'Prelude of Light', nameKo: '빛의 전주곡', group: 'warp', accent: '#f0d860', bpm: 92,
+    id: 'prelude', name: 'Prelude of Light', nameKo: '빛의 전주곡', group: 'warp', accent: '#f0d860', bpm: 110,
     notes: [['up', 1], ['right', 1], ['up', 1], ['right', 1], ['left', 2], ['up', 2]],
     effect: 'Warp to the Temple of Time.',
   },
