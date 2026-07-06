@@ -14,6 +14,8 @@
   <div class="stars" aria-hidden="true"></div>
   <div class="sky-day" aria-hidden="true"></div>
   <div class="fx" aria-hidden="true"></div>
+  <!-- recognition toast: a body-level child so its z-index beats the fx layers -->
+  <div id="banner" class="banner" role="status" aria-live="polite"></div>
 
   <header class="site-head">
     <div class="triforce" aria-hidden="true">
@@ -229,14 +231,11 @@
         <button id="stop-all" class="ghost-btn">■ Stop</button>
         <p class="hint"><b>Hold</b> a button, key, or the ocarina's own holes to sustain a note. Keys: <b>arrow keys</b> = C-buttons, <b>A</b> = A.</p>
       </div>
-      <div id="practice-status" class="sr-only" role="status" aria-live="assertive"></div>
+      <div id="practice-status" class="sr-only" role="status" aria-live="polite"></div>
     </section>
 
-    <!-- floating banner shown when a known song is recognised -->
-    <div id="banner" class="banner" role="status" aria-live="polite"></div>
-
     <!-- ============================== Songbook ============================== -->
-    <div id="songbook"></div>
+    <div id="songbook" tabindex="-1"></div>
   </main>
 
   <footer class="site-foot">

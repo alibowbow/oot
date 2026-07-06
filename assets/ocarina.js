@@ -190,11 +190,10 @@
       v.sources.forEach((o) => { try { o.start(t, o._offset || 0); } catch (e) { try { o.start(t); } catch (_) {} } });
     }
 
-    // One-shot note of fixed length. Optional `when` schedules it on the audio
-    // clock (used by the sample-accurate auto-player).
-    play(freq, dur = 0.62, when) {
+    // One-shot note of fixed length (auto-player / practice playback).
+    play(freq, dur = 0.62) {
       const ctx = this.ensure();
-      const t = when != null ? when : ctx.currentTime;
+      const t = ctx.currentTime;
       const v = this._voice(freq, this._pan(freq));
       const peak = 0.42 * v.peakVar, atk = 0.04, rel = Math.min(0.22, dur * 0.4);
       v.env.gain.setValueAtTime(0.0001, t);
@@ -610,8 +609,7 @@
     card.classList.add('playing');
     practice = { song, card, index: 0 };
     updatePracticeUI();
-    setPracticeStatus(`Practising ${song.name}. Follow the highlighted button.`);
-    expect(song.ids[0]);
+    expect(song.ids[0], `Practising ${song.name}. `);   // fold intro into the first cue
     markStaff(card, 0);
   }
 
@@ -651,10 +649,10 @@
     }
   }
 
-  function expect(id) {
+  function expect(id, prefix = '') {
     clearExpect();
     const b = buttons[id];
-    if (b) { b.classList.add('expect'); setPracticeStatus(`Next: ${b.getAttribute('aria-label')}`); }
+    if (b) { b.classList.add('expect'); setPracticeStatus(`${prefix}Next: ${b.getAttribute('aria-label')}`); }
   }
   function clearExpect() { NOTE_ORDER.forEach((id) => buttons[id] && buttons[id].classList.remove('expect')); }
 
@@ -810,23 +808,23 @@
     let stored = null;
     try { stored = JSON.parse(localStorage.getItem('oot-audio') || 'null'); } catch (e) { /* ignore */ }
     if (stored && typeof stored.v === 'number') { synth.volume = stored.v; if (vol) vol.value = stored.v; }
-    if (stored && stored.m && muteBtn) { synth.muted = true; muteBtn.classList.add('muted'); muteBtn.setAttribute('aria-pressed', 'true'); muteBtn.setAttribute('aria-label', 'Unmute'); }
+    if (stored && stored.m && muteBtn) { synth.muted = true; muteBtn.classList.add('muted'); muteBtn.setAttribute('aria-pressed', 'true'); }
     const persist = () => { try { localStorage.setItem('oot-audio', JSON.stringify({ v: synth.volume, m: synth.muted })); } catch (e) { /* ignore */ } };
 
     function setMute(m) {
       synth.setMuted(m);
       if (muteBtn) {
         muteBtn.classList.toggle('muted', m);
-        muteBtn.setAttribute('aria-pressed', m ? 'true' : 'false');
-        muteBtn.setAttribute('aria-label', m ? 'Unmute' : 'Mute');
+        muteBtn.setAttribute('aria-pressed', m ? 'true' : 'false');   // stable name "Mute" conveys the thing; pressed conveys state
       }
       persist();
     }
     if (vol) vol.addEventListener('input', () => { synth.setVolume(parseFloat(vol.value)); if (synth.muted) setMute(false); persist(); });
     if (muteBtn) muteBtn.addEventListener('click', () => { synth.ensure(); setMute(!synth.muted); });
 
-    // tempo (playback speed)
+    // tempo (playback speed) — setRate(1) also seeds aria-pressed on all three
     $$('.tempo button').forEach((b) => b.addEventListener('click', () => setRate(parseFloat(b.dataset.rate))));
+    setRate(1);
 
     // Stop = panic: release held sustains + any in-flight auto-play, reset UI
     const stop = $('#stop-all');

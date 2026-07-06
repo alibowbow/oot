@@ -294,7 +294,7 @@ main { position: relative; z-index: 1; max-width: 1040px; margin: 0 auto; paddin
   html { scroll-behavior: auto; }
   .stars, .stars::before, .stars::after, .triforce, .ocarina, .ocarina .gloss-wrap,
   .song-card.discovered, .note-btn.expect, .note-btn.a.expect,
-  .echo span, .staff .snote.on { animation: none !important; }
+  .echo span, .staff .snote.on, .hole.lit { animation: none !important; }
   .note-btn.expect { box-shadow: 0 5px 0 #9c7d10, 0 0 0 5px rgba(255,255,255,.72); }
   .note-btn.a.expect { box-shadow: 0 6px 0 #2c46a8, 0 0 0 5px rgba(190,212,255,.85); }
   .note-btn.wrong { box-shadow: 0 5px 0 #9c7d10, 0 0 0 5px rgba(224,72,72,.9) !important; }
