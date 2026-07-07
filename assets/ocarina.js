@@ -247,12 +247,16 @@
   const $ = (sel, root = document) => root.querySelector(sel);
   const $$ = (sel, root = document) => Array.from(root.querySelectorAll(sel));
 
-  const buttons = {};        // note id -> button element
+  const buttons = {};        // note id -> main pad button
+  const minis = {};          // note id -> fixed mini-pad button (games/studio)
   const holes = {};          // note id -> ocarina hole element
   NOTE_ORDER.forEach((id) => {
     buttons[id] = $(`.note-btn[data-note="${id}"]`);
+    minis[id] = $(`#mini-pad .note-btn[data-note="${id}"]`);
     holes[id] = $(`.hole[data-hole="${id}"]`);
   });
+  // apply a state change to the main button AND its mini-pad mirror
+  const eachBtn = (id, fn) => { if (buttons[id]) fn(buttons[id]); if (minis[id]) fn(minis[id]); };
 
   const banner = $('#banner');
   const echo = $('#echo');     // shows the running stream of notes you play
@@ -277,7 +281,7 @@
     const note = NOTES[id];
     if (!note) return;
     synth.noteOn(id, note.freq);
-    if (buttons[id]) buttons[id].classList.add('active');
+    eachBtn(id, (b) => b.classList.add('active'));
     litOn(holes[id], note.color);
     spawnMotes(note.color, 2);
     if (record) { pushEcho(id); detect(id); }
@@ -287,7 +291,7 @@
 
   function endNote(id) {
     synth.noteOff(id);
-    if (buttons[id]) buttons[id].classList.remove('active');
+    eachBtn(id, (b) => b.classList.remove('active'));
     litOff(holes[id]);
     noteEndSubs.forEach((f) => { try { f(id); } catch (e) { /* listener error */ } });
   }
@@ -297,7 +301,7 @@
     const note = NOTES[id];
     if (!note) return;
     synth.play(note.freq, dur);
-    flash(buttons[id]);
+    eachBtn(id, flash);                 // main pad + mini-pad both blink
     glow(holes[id], note.color);
     spawnMotes(note.color, 1);
   }
@@ -307,7 +311,7 @@
     held.clear();
     synth.allOff();
     NOTE_ORDER.forEach((id) => {
-      if (buttons[id]) buttons[id].classList.remove('active');
+      eachBtn(id, (b) => b.classList.remove('active'));
       litOff(holes[id]);
     });
   }
@@ -555,6 +559,7 @@
 
   NOTE_ORDER.forEach((id) => {
     bindHold(buttons[id], id, 'p:');
+    bindHold(minis[id], id, 'm:');
     bindHold($(`.hit[data-hole="${id}"]`), id, 'h:');
   });
 
@@ -680,22 +685,23 @@
       }
     } else {
       // wrong note — nudge + a static ring (visible under reduced-motion too)
-      const b = buttons[want];
-      if (b) {
+      eachBtn(want, (b) => {
         b.classList.remove('shake', 'wrong'); void b.offsetWidth;
         b.classList.add('shake', 'wrong');
         setTimeout(() => b.classList.remove('wrong'), 340);
-        setPracticeStatus(`Not quite — play ${b.getAttribute('aria-label')}`);
-      }
+      });
+      const b = buttons[want];
+      if (b) setPracticeStatus(`Not quite — play ${b.getAttribute('aria-label')}`);
     }
   }
 
   function expect(id, prefix = '') {
     clearExpect();
+    eachBtn(id, (b) => b.classList.add('expect'));
     const b = buttons[id];
-    if (b) { b.classList.add('expect'); setPracticeStatus(`${prefix}Next: ${b.getAttribute('aria-label')}`); }
+    if (b) setPracticeStatus(`${prefix}Next: ${b.getAttribute('aria-label')}`);
   }
-  function clearExpect() { NOTE_ORDER.forEach((id) => buttons[id] && buttons[id].classList.remove('expect')); }
+  function clearExpect() { NOTE_ORDER.forEach((id) => eachBtn(id, (b) => b.classList.remove('expect'))); }
 
   const wait = (ms) => new Promise((r) => setTimeout(r, ms));
 
@@ -891,6 +897,9 @@
         b.setAttribute('aria-selected', on ? 'true' : 'false');
       });
       $$('.tabpanel').forEach((p) => { p.hidden = p.id !== 'panel-' + key; });
+      // games / studio live far below the main pad — dock a mini-pad at the
+      // bottom of the screen so the instrument stays under your thumbs
+      document.body.classList.toggle('minipad-on', key === 'games' || key === 'studio');
       stopAll();                                   // leaving a tab stops playback
       document.dispatchEvent(new CustomEvent('oot:tab', { detail: key }));
     };

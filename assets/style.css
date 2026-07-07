@@ -593,6 +593,32 @@ select, #rec-name {
 .ach-card .a-desc { color: rgba(220,232,255,.55); font-size: .72rem; display: block; margin-top: 5px; line-height: 1.35; }
 .reset-row { justify-content: center; margin-top: 20px; }
 
+/* fixed mini play pad — docked at the bottom in the games / studio tabs ------- */
+.mini-pad {
+  position: fixed; left: 50%; bottom: 10px; z-index: 44;
+  display: flex; gap: 10px; align-items: center;
+  padding: 10px 14px calc(10px + env(safe-area-inset-bottom, 0px));
+  background: linear-gradient(180deg, rgba(16,28,56,.95), rgba(8,14,32,.95));
+  border: 1px solid rgba(246,198,31,.4); border-radius: 20px;
+  box-shadow: 0 12px 34px rgba(0,0,0,.55), 0 0 18px rgba(246,198,31,.12);
+  transform: translateX(-50%) translateY(150%); pointer-events: none;
+  transition: transform .28s ease;
+}
+body.minipad-on .mini-pad { transform: translateX(-50%) translateY(0); pointer-events: auto; }
+.note-btn.mini { width: 46px; height: 46px; box-shadow: 0 3px 0 #9c7d10, 0 5px 10px rgba(0,0,0,.4); }
+.note-btn.mini .arrow { font-size: 1.05rem; }
+.note-btn.mini.a { width: 52px; height: 52px; box-shadow: 0 3px 0 #2c46a8, 0 6px 12px rgba(0,0,0,.45); }
+.note-btn.mini.a .arrow { font-size: 1.25rem; }
+.note-btn.mini:active, .note-btn.mini.active { transform: translateY(2px); }
+/* keep panel content and achievement toasts clear of the docked pad */
+body.minipad-on main { padding-bottom: 120px; }
+body.minipad-on .ach-toast { bottom: 104px; }
+@media (max-width: 480px) {
+  .mini-pad { gap: 7px; }
+  .note-btn.mini { width: 42px; height: 42px; }
+  .note-btn.mini.a { width: 47px; height: 47px; }
+}
+
 /* silent achievement toasts (bottom-right, below the banner in importance) ----- */
 .ach-toast { position: fixed; right: 14px; bottom: 14px; z-index: 45; display: flex; flex-direction: column; gap: 8px; pointer-events: none; }
 .ach-pop {
