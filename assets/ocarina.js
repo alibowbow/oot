@@ -899,7 +899,7 @@
       $$('.tabpanel').forEach((p) => { p.hidden = p.id !== 'panel-' + key; });
       // games / studio live far below the main pad — dock a mini-pad at the
       // bottom of the screen so the instrument stays under your thumbs
-      document.body.classList.toggle('minipad-on', key === 'games' || key === 'studio');
+      document.body.classList.toggle('minipad-on', key === 'games' || key === 'studio' || key === 'learn');
       stopAll();                                   // leaving a tab stops playback
       document.dispatchEvent(new CustomEvent('oot:tab', { detail: key }));
     };
