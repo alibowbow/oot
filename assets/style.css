@@ -648,6 +648,18 @@ select, #rec-name {
 .fp.right { grid-column: 3; grid-row: 2; } .fp.down { grid-column: 2; grid-row: 3; }
 .fp.a { grid-column: 3; grid-row: 3; background: radial-gradient(circle at 35% 30%, #9db8ff, var(--blue) 72%); color: #fff; }
 
+/* real 12-hole fingering chart: ● closed / ○ open */
+.fing { display: inline-flex; flex-direction: column; gap: 10px; margin: 4px auto; padding: 14px 18px;
+  background: rgba(10,20,44,.55); border: 1px solid rgba(246,198,31,.22); border-radius: 12px; }
+.fing-row { display: flex; align-items: center; gap: 10px; }
+.fing-side { width: 96px; text-align: right; color: rgba(220,232,255,.62); font-size: .74rem; margin-right: 4px; }
+.fh-wrap { display: inline-flex; flex-direction: column; align-items: center; gap: 3px; }
+.fh { width: 24px; height: 24px; border-radius: 50%; border: 2px solid #cfe0f2; background: transparent; box-sizing: border-box; }
+.fh.small { width: 14px; height: 14px; margin-top: 5px; }
+.fh.closed { background: #e8f1fb; border-color: #e8f1fb; }   /* solid ● = closed hole */
+.fh-label { font-size: .62rem; color: rgba(220,232,255,.55); }
+.l-fig-fing { text-align: center; }
+
 .l-target { display: flex; align-items: center; gap: 14px; margin: 10px 0; }
 .l-chip {
   width: 44px; height: 44px; border-radius: 10px; display: inline-grid; place-items: center;

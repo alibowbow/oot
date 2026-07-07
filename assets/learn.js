@@ -124,6 +124,25 @@
         `<span class="fp down">▼</span><span class="fp a">A</span></div>` +
         (fig.caption ? `<figcaption>${fig.caption}</figcaption>` : '') + `</figure>`;
     }
+    if (fig.kind === 'fingering') {
+      // Real 12-hole ocarina fingering chart: ● = closed hole, ○ = open.
+      // 12 holes = 8 finger holes + 2 small sub-holes + 2 thumb holes (back).
+      const closed = new Set(fig.closed || []);
+      const hole = (id, label, small) =>
+        `<span class="fh-wrap"><span class="fh${small ? ' small' : ''}${closed.has(id) ? ' closed' : ''}"></span>` +
+        `<span class="fh-label">${label}</span></span>`;
+      return `<figure class="l-fig l-fig-fing"><div class="fing">` +
+        `<div class="fing-row"><span class="fing-side">앞면 · 왼손</span>` +
+        hole('L1', '검지') + hole('L2', '중지') + hole('L3', '약지') + hole('L4', '새끼') + hole('SL', '보조', true) +
+        `</div>` +
+        `<div class="fing-row"><span class="fing-side">앞면 · 오른손</span>` +
+        hole('R1', '검지') + hole('R2', '중지') + hole('R3', '약지') + hole('R4', '새끼') + hole('SR', '보조', true) +
+        `</div>` +
+        `<div class="fing-row"><span class="fing-side">뒷면 · 엄지</span>` +
+        hole('TL', '왼엄지') + hole('TR', '오른엄지') +
+        `</div></div>` +
+        (fig.caption ? `<figcaption>${fig.caption}</figcaption>` : '') + `</figure>`;
+    }
     return '';
   }
 
@@ -169,6 +188,16 @@
       stepBody.innerHTML =
         (step.title ? `<h4 class="step-title">${step.title}</h4>` : '') +
         `<div class="step-prose">${step.html || ''}</div>` + figHTML(step.fig);
+    },
+
+    /* 실제 악기 실습 — 앱이 들을 수 없는 훈련을 스스로 확인하고 통과 */
+    do(step) {
+      stepBody.innerHTML =
+        `<p class="step-prompt">${step.prompt || ''}</p>` + figHTML(step.fig) +
+        `<div class="g-controls"><button id="do-btn" class="big-btn gold">✔ ${step.confirm || '해 보았습니다'}</button></div>`;
+      $('#do-btn', stepBody).addEventListener('click', () => {
+        markStepDone(step.praise || '좋습니다. 서두르지 않았다면 그것으로 충분합니다.');
+      });
     },
 
     /* 특정 음을 n번 연주 */
