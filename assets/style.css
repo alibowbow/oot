@@ -159,13 +159,14 @@ main { position: relative; z-index: 1; max-width: 1040px; margin: 0 auto; paddin
 .note-btn.c.active { box-shadow: 0 1px 0 #9c7d10, 0 3px 10px rgba(0,0,0,.4), 0 0 22px 4px rgba(246,198,31,.85); }
 .note-btn.a.active { box-shadow: 0 1px 0 #2c46a8, 0 3px 10px rgba(0,0,0,.4), 0 0 26px 5px rgba(91,134,255,.95); }
 
-/* practice highlight + wrong-note shake */
-.note-btn.expect { animation: expectPulse 1s ease-in-out infinite; }
+/* practice highlight + wrong-note shake (.l-guide = learn mode's own guide,
+   identical look but never cleared by practice's clearExpect) */
+.note-btn.expect, .note-btn.l-guide { animation: expectPulse 1s ease-in-out infinite; }
 @keyframes expectPulse {
   0%,100% { box-shadow: 0 5px 0 #9c7d10, 0 0 0 0 rgba(255,255,255,.0); }
   50%     { box-shadow: 0 5px 0 #9c7d10, 0 0 0 7px rgba(255,255,255,.35); }
 }
-.note-btn.a.expect { animation: expectPulseA 1s ease-in-out infinite; }
+.note-btn.a.expect, .note-btn.a.l-guide { animation: expectPulseA 1s ease-in-out infinite; }
 @keyframes expectPulseA {
   0%,100% { box-shadow: 0 6px 0 #2c46a8, 0 0 0 0 rgba(180,205,255,0); }
   50%     { box-shadow: 0 6px 0 #2c46a8, 0 0 0 8px rgba(180,205,255,.45); }
@@ -294,9 +295,10 @@ main { position: relative; z-index: 1; max-width: 1040px; margin: 0 auto; paddin
   html { scroll-behavior: auto; }
   .stars, .stars::before, .stars::after, .triforce, .ocarina, .ocarina .gloss-wrap,
   .song-card.discovered, .note-btn.expect, .note-btn.a.expect,
+  .note-btn.l-guide, .note-btn.a.l-guide,
   .echo span, .staff .snote.on, .hole.lit { animation: none !important; }
-  .note-btn.expect { box-shadow: 0 5px 0 #9c7d10, 0 0 0 5px rgba(255,255,255,.72); }
-  .note-btn.a.expect { box-shadow: 0 6px 0 #2c46a8, 0 0 0 5px rgba(190,212,255,.85); }
+  .note-btn.expect, .note-btn.l-guide { box-shadow: 0 5px 0 #9c7d10, 0 0 0 5px rgba(255,255,255,.72); }
+  .note-btn.a.expect, .note-btn.a.l-guide { box-shadow: 0 6px 0 #2c46a8, 0 0 0 5px rgba(190,212,255,.85); }
   .note-btn.wrong { box-shadow: 0 5px 0 #9c7d10, 0 0 0 5px rgba(224,72,72,.9) !important; }
 }
 
@@ -615,12 +617,12 @@ select, #rec-name {
 .lesson-card-toc.done .lc-num { background: radial-gradient(circle at 35% 30%, #b9edb4, #63b06c 72%); color: #0c2410; }
 .lc-body { flex: 1; min-width: 0; }
 .lc-body h3 { margin: 0 0 3px; font-family: var(--serif); color: var(--gold-soft); font-size: 1.02rem; }
-.lc-body h3 span { font-family: var(--ui); font-size: .72rem; color: rgba(220,232,255,.45); margin-left: 6px; }
+.lc-body h3 span { font-family: var(--ui); font-size: .72rem; color: rgba(220,232,255,.62); margin-left: 6px; }
 .lc-body p { margin: 0 0 4px; color: rgba(222,233,255,.68); font-size: .82rem; line-height: 1.45; }
-.lc-meta { color: rgba(220,232,255,.42); font-size: .72rem; }
+.lc-meta { color: rgba(220,232,255,.62); font-size: .72rem; }
 
 .lesson-top { display: flex; align-items: center; gap: 14px; margin: 4px 0 10px; flex-wrap: wrap; }
-.lesson-where b { font-family: var(--serif); color: var(--gold); font-size: 1.05rem; }
+.lesson-where h3 { display: inline; margin: 0; font-family: var(--serif); color: var(--gold); font-size: 1.05rem; font-weight: 700; }
 .lesson-where span { color: rgba(220,232,255,.55); font-size: .85rem; }
 .lesson-progress { height: 6px; border-radius: 4px; background: rgba(10,20,44,.8); overflow: hidden; margin-bottom: 12px; }
 .lesson-progress span { display: block; height: 100%; width: 0; background: var(--gold); transition: width .3s ease; }

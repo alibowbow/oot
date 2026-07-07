@@ -65,6 +65,8 @@
     home.hidden = true;
     lessonEl.hidden = false;
     renderStep();
+    const t = $('#lesson-title');
+    if (t) t.focus({ preventScroll: true });
   }
 
   function exitLesson() {
@@ -74,6 +76,8 @@
     home.hidden = false;
     api.stopAll();
     renderHome();
+    const b = $('#lesson-list button');
+    if (b) b.focus({ preventScroll: true });
   }
 
   function teardown() {
@@ -88,12 +92,14 @@
     feedback.classList.toggle('good', !!good);
   }
 
-  // guide highlight on both pads (same .expect visual practice mode uses)
+  // Guide highlight on both pads. Uses learn's OWN class (.l-guide, styled like
+  // practice's .expect) so ocarina.js clearExpect() — which playSong calls
+  // internally — can never wipe an active lesson guide.
   function guide(id) {
     clearGuides();
-    if (id) $$(`.note-btn[data-note="${id}"]`).forEach((b) => b.classList.add('expect'));
+    if (id) $$(`.note-btn[data-note="${id}"]`).forEach((b) => b.classList.add('l-guide'));
   }
-  function clearGuides() { $$('.note-btn.expect').forEach((b) => b.classList.remove('expect')); }
+  function clearGuides() { $$('.note-btn.l-guide').forEach((b) => b.classList.remove('l-guide')); }
 
   function markStepDone(msg) {
     if (stepDone) return;
@@ -142,6 +148,19 @@
 
     const runner = RUNNERS[step.type] || RUNNERS.read;
     runner(step);
+
+    // disabling "다음" would drop keyboard focus to <body>; keep it in the step
+    if (nextBtn.disabled && (document.activeElement === document.body || document.activeElement === nextBtn)) {
+      stepBody.focus({ preventScroll: true });
+    }
+  }
+
+  // Malformed step data degrades to a readable step that does NOT gate "next"
+  // (otherwise a bad entry would soft-lock the whole chapter).
+  function degrade(step) {
+    stepDone = true;
+    nextBtn.disabled = false;
+    RUNNERS.read(step);
   }
 
   const RUNNERS = {
@@ -193,8 +212,12 @@
       };
       const offOn = api.onNote((nid) => {
         if (stepDone) return;
-        if (nid === id) { t0 = performance.now(); setFeedback('그대로 누르고 계세요…'); raf = requestAnimationFrame(fill); }
-        else setFeedback(`${NAME[id]} 버튼으로 해볼까요?`);
+        if (nid === id) {
+          cancelAnimationFrame(raf);              // never stack fill loops
+          t0 = performance.now();
+          setFeedback('그대로 누르고 계세요…');
+          raf = requestAnimationFrame(fill);
+        } else setFeedback(`${NAME[id]} 버튼으로 해볼까요?`);
       });
       const offEnd = api.onNoteEnd((nid) => {
         if (stepDone || nid !== id || !t0) return;
@@ -204,13 +227,14 @@
         if (held >= ms) { clearGuides(); markStepDone(`${(held / 1000).toFixed(1)}초! 멋진 장음이었어요. ✨`); }
         else setFeedback(`${(held / 1000).toFixed(1)}초 — 조금만 더 길게 불어볼까요?`);
       });
-      cleanup = () => { offOn(); offEnd(); cancelAnimationFrame(raf); };
+      // t0 = 0 makes any in-flight loop self-terminate on its next frame
+      cleanup = () => { offOn(); offEnd(); t0 = 0; cancelAnimationFrame(raf); };
     },
 
     /* 순서대로 연주 (가이드 표시) */
     seq(step) {
       const ids = (step.ids || []).filter((i) => NOTES[i]);
-      if (!ids.length) { RUNNERS.read(step); return; }
+      if (!ids.length) { degrade(step); return; }
       let at = 0;
       stepBody.innerHTML =
         `<p class="step-prompt">${step.prompt || ''}</p>` +
@@ -236,17 +260,18 @@
     /* 듣고 따라하기 */
     echo(step) {
       const ids = (step.ids || []).filter((i) => NOTES[i]);
-      if (!ids.length) { RUNNERS.read(step); return; }
-      let at = 0, phase = 'idle', timers = [];
+      if (!ids.length) { degrade(step); return; }
+      let at = 0, phase = 'idle', timers = [], dead = false;
       stepBody.innerHTML =
         `<p class="step-prompt">${step.prompt || ''}</p>` +
         `<div class="g-controls"><button id="echo-play" class="big-btn gold">🔊 들어보기</button>` +
         `<span class="l-count">${ids.length}음</span></div>`;
       const play = () => {
+        if (dead || stepDone) return;            // torn-down step must stay silent
         timers.forEach(clearTimeout); timers = [];
         phase = 'show'; at = 0;
         setFeedback('잘 들어보세요…');
-        ids.forEach((nid, k) => timers.push(setTimeout(() => api.pulseNote(nid, 0.42), 250 + k * 520)));
+        ids.forEach((nid, k) => timers.push(setTimeout(() => { if (!dead) api.pulseNote(nid, 0.42); }, 250 + k * 520)));
         timers.push(setTimeout(() => { phase = 'input'; setFeedback('이제 그대로 따라 연주해 보세요!'); }, 250 + ids.length * 520 + 150));
       };
       $('#echo-play', stepBody).addEventListener('click', play);
@@ -260,7 +285,7 @@
           setFeedback('괜찮아요! "들어보기"로 다시 듣고 도전해 보세요.');
         }
       });
-      cleanup = () => { off(); timers.forEach(clearTimeout); };
+      cleanup = () => { dead = true; off(); timers.forEach(clearTimeout); };
     },
 
     /* 확인 문제 */
@@ -288,12 +313,12 @@
     /* 곡 구간 듣고 따라 연주 */
     song(step) {
       const src = SONGS.find((s) => s.id === step.songId);
-      if (!src) { RUNNERS.read(step); return; }
+      if (!src) { degrade(step); return; }
       const from = Math.max(0, step.from | 0);
       const to = Math.min(src.notes.length, step.to == null ? src.notes.length : step.to | 0);
       const phrase = src.notes.slice(from, to);
       const ids = phrase.map((n) => n[0]);
-      if (!ids.length) { RUNNERS.read(step); return; }
+      if (!ids.length) { degrade(step); return; }
       let at = 0;
       stepBody.innerHTML =
         `<p class="step-prompt">${step.prompt || ''}</p>` +
@@ -347,9 +372,17 @@
   });
   $('#lesson-exit').addEventListener('click', exitLesson);
 
-  // leaving the tab (or pressing Stop) tears the current exercise down
-  document.addEventListener('oot:tab', (e) => { if (e.detail !== 'learn') teardown(); });
-  document.addEventListener('oot:stop', teardown);
+  // Leaving the tab tears the current exercise down; coming back (or pressing
+  // Stop) RE-ARMS it via renderStep — renderStep starts with teardown(), so old
+  // listeners/timers are disposed and the visible step is never left dead.
+  document.addEventListener('oot:tab', (e) => {
+    if (e.detail === 'learn') { if (cur && !lessonEl.hidden) renderStep(); }
+    else teardown();
+  });
+  document.addEventListener('oot:stop', () => {
+    if (cur && !lessonEl.hidden) renderStep();
+    else teardown();
+  });
 
   renderHome();
 })();
