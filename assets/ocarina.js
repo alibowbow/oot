@@ -262,6 +262,14 @@
   let practice = null;         // active practice session, if any
   const held = new Set();      // note ids currently held down (key / pointer)
 
+  // Event buses so add-on modules (studio / games / progress) can listen to the
+  // instrument without reaching into its internals. pulseNote (auto-play) does
+  // NOT emit — only real user input counts.
+  const noteSubs = new Set();     // fn(id) on user note start
+  const noteEndSubs = new Set();  // fn(id) on user note release
+  const songSubs = new Set();     // fn({type:'song'|'scarecrow', song?, practiced?})
+  let scarecrowIds = null;        // user-registered 8-note Scarecrow's Song
+
   // Press-and-hold: start a sustained note and keep its button + ocarina hole
   // lit until endNote() is called, so the note rings for as long as you hold.
   // `record` feeds the free-play song detector (auto-play passes false).
@@ -274,12 +282,14 @@
     spawnMotes(note.color, 2);
     if (record) { pushEcho(id); detect(id); }
     if (practice) practiceInput(id);
+    noteSubs.forEach((f) => { try { f(id); } catch (e) { /* listener error */ } });
   }
 
   function endNote(id) {
     synth.noteOff(id);
     if (buttons[id]) buttons[id].classList.remove('active');
     litOff(holes[id]);
+    noteEndSubs.forEach((f) => { try { f(id); } catch (e) { /* listener error */ } });
   }
 
   // One-shot timed note used by the auto-player (button/hole blink and fade).
@@ -367,6 +377,29 @@
         return;
       }
     }
+
+    // the player's own registered 8-note Scarecrow's Song
+    if (scarecrowIds && recent.length >= 8) {
+      const tail8 = recent.slice(-8);
+      if (tail8.every((v, i) => v === scarecrowIds[i])) {
+        if (now - lastDetect < 900) return;
+        lastDetect = now;
+        recent.length = 0;
+        onScarecrowPlayed();
+      }
+    }
+  }
+
+  function onScarecrowPlayed() {
+    banner.innerHTML =
+      `<span class="b-note">♪</span> You played the <b>Scarecrow's Song</b> ` +
+      `<span class="b-ko" lang="ko">허수아비의 노래</span> <span class="b-note">♪</span>` +
+      `<small>Your own melody echoes across Hyrule…</small>`;
+    banner.classList.add('show');
+    clearTimeout(bannerTimer);
+    bannerTimer = setTimeout(() => banner.classList.remove('show'), 4200);
+    if (!prefersReduce()) sparkles(10, '#e8c76a');
+    songSubs.forEach((f) => { try { f({ type: 'scarecrow' }); } catch (e) { /* listener */ } });
   }
 
   function onSongPlayed(song, opts = {}) {
@@ -374,6 +407,7 @@
     showBanner(song, opts);
     worldFx(song);
     markLearned(song);
+    songSubs.forEach((f) => { try { f({ type: 'song', song, practiced: !!opts.practiced }); } catch (e) { /* listener */ } });
     const card = $(`.song-card[data-song="${song.id}"]`);
     if (card) {
       card.classList.remove('discovered'); void card.offsetWidth;   // restart glow
@@ -533,7 +567,9 @@
     if (!id) return;
     const el = e.target;
     if (el && el.closest && el.closest('input, select, textarea, [contenteditable]')) return;
-    const atInstrument = el === document.body || (el.closest && el.closest('.instrument'));
+    // playable while "at the instrument" or inside a panel that opts in
+    // (studio / games), so recordings and games can be played by keyboard too
+    const atInstrument = el === document.body || (el.closest && el.closest('.instrument, [data-keys-ok]'));
     if (!atInstrument) return;
     e.preventDefault();
     if (e.repeat || held.has('k:' + id)) return;
@@ -582,11 +618,16 @@
     $$('.snote.on, .tab.on').forEach((e) => e.classList.remove('on'));
   }
 
+  // Play any song-like object ({notes, bpm}) — `card` is optional so the
+  // compose studio can preview a take without a songbook card.
   async function playSong(song, card) {
     stopAll();
     const token = (playToken = Date.now());
-    card.classList.add('playing');
-    $('.play-btn', card).textContent = '■ Stop';
+    if (card) {
+      card.classList.add('playing');
+      const pb = $('.play-btn', card);
+      if (pb) pb.textContent = '■ Stop';
+    }
 
     const beatMs = 60000 / song.bpm / rate;
     for (let i = 0; i < song.notes.length; i++) {
@@ -594,11 +635,11 @@
       const [id, beats] = song.notes[i];
       const ms = beats * beatMs;
       pulseNote(id, Math.max(0.18, (ms / 1000) * 0.94));
-      markStaff(card, i);
+      if (card) markStaff(card, i);
       await wait(ms);
     }
     await wait(140);
-    if (playToken === token) { stopAll(); markStaff(card, -1); }
+    if (playToken === token) { stopAll(); if (card) markStaff(card, -1); }
   }
 
   /* -------------------------------------------------------- Practice mode */
@@ -826,20 +867,60 @@
     $$('.tempo button').forEach((b) => b.addEventListener('click', () => setRate(parseFloat(b.dataset.rate))));
     setRate(1);
 
-    // Stop = panic: release held sustains + any in-flight auto-play, reset UI
+    // Stop = panic: release held sustains + any in-flight auto-play, reset UI,
+    // and tell add-on modules (games / studio) to stand down too
     const stop = $('#stop-all');
-    if (stop) stop.addEventListener('click', () => { releaseAllHeld(); synth.allOff(); stopAll(); });
+    if (stop) stop.addEventListener('click', () => {
+      releaseAllHeld(); synth.allOff(); stopAll();
+      document.dispatchEvent(new CustomEvent('oot:stop'));
+    });
 
     // suppress the mobile long-press copy/context menu over the play area
     const inst = $('.instrument');
     if (inst) inst.addEventListener('contextmenu', (e) => e.preventDefault());
   }
 
+  /* ----------------------------------------------------------------- Tabs */
+  function initTabs() {
+    const btns = $$('.tabbtn');
+    if (!btns.length) return;
+    const show = (key) => {
+      btns.forEach((b) => {
+        const on = b.dataset.tab === key;
+        b.classList.toggle('on', on);
+        b.setAttribute('aria-selected', on ? 'true' : 'false');
+      });
+      $$('.tabpanel').forEach((p) => { p.hidden = p.id !== 'panel-' + key; });
+      stopAll();                                   // leaving a tab stops playback
+      document.dispatchEvent(new CustomEvent('oot:tab', { detail: key }));
+    };
+    btns.forEach((b) => b.addEventListener('click', () => show(b.dataset.tab)));
+    const skip = $('.skip-link');
+    if (skip) skip.addEventListener('click', () => {
+      show('songbook');
+      setTimeout(() => { const t = $('#songbook'); if (t) t.focus(); }, 0);
+    });
+  }
+
+  /* --------------------------------------------- API for add-on modules */
+  // studio.js / games.js / progress.js build on this surface instead of
+  // reaching into the instrument's internals.
+  OOT.api = {
+    synth, startNote, endNote, pulseNote, playSong, stopAll, isPlaying,
+    staffSVG, tabHTML, markStaff, sparkles, prefersReduce,
+    onNote: (f) => { noteSubs.add(f); return () => noteSubs.delete(f); },
+    onNoteEnd: (f) => { noteEndSubs.add(f); return () => noteEndSubs.delete(f); },
+    onSong: (f) => { songSubs.add(f); return () => songSubs.delete(f); },
+    setScarecrow: (ids) => { scarecrowIds = (ids && ids.length === 8) ? ids.slice() : null; },
+    learnedCount: () => learned.size,
+  };
+
   /* ---------------------------------------------------------------- Start */
   buildSongbook();
   SONGS.forEach((s) => { if (learned.has(s.id)) applyLearned(s.id); });
   updateTally();
   wireControls();
+  initTabs();
   // resume audio on first gesture (autoplay policies)
   window.addEventListener('pointerdown', () => synth.ensure(), { once: true });
   window.addEventListener('keydown', () => synth.ensure(), { once: true });

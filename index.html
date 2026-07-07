@@ -234,9 +234,103 @@
       <div id="practice-status" class="sr-only" role="status" aria-live="polite"></div>
     </section>
 
+    <!-- ============================ Section tabs ============================ -->
+    <nav class="tabbar" role="tablist" aria-label="App sections">
+      <button class="tabbtn on" role="tab" aria-selected="true" data-tab="songbook" id="tabbtn-songbook" aria-controls="panel-songbook">📜 노래책 <span>Songbook</span></button>
+      <button class="tabbtn" role="tab" aria-selected="false" data-tab="studio" id="tabbtn-studio" aria-controls="panel-studio">✍️ 작곡 <span>Studio</span></button>
+      <button class="tabbtn" role="tab" aria-selected="false" data-tab="games" id="tabbtn-games" aria-controls="panel-games">🎮 게임 <span>Games</span></button>
+      <button class="tabbtn" role="tab" aria-selected="false" data-tab="progress" id="tabbtn-progress" aria-controls="panel-progress">🏆 기록 <span>Progress</span></button>
+    </nav>
+
     <!-- ============================== Songbook ============================== -->
-    <div id="songbook" tabindex="-1"></div>
+    <section id="panel-songbook" class="tabpanel" role="tabpanel" aria-labelledby="tabbtn-songbook">
+      <div id="songbook" tabindex="-1"></div>
+    </section>
+
+    <!-- =========================== Compose studio =========================== -->
+    <section id="panel-studio" class="tabpanel" role="tabpanel" aria-labelledby="tabbtn-studio" data-keys-ok hidden>
+      <div class="panel-head"><h2>작곡 스튜디오 <span>Compose your own melodies</span></h2></div>
+
+      <div class="panel-card">
+        <div class="rec-controls">
+          <button id="rec-btn" class="big-btn rec">● 녹음</button>
+          <button id="rec-stop" class="big-btn" disabled>■ 정지</button>
+          <button id="rec-preview" class="big-btn" disabled>▶ 미리듣기</button>
+          <input id="rec-name" type="text" maxlength="24" placeholder="내 노래 이름" aria-label="Song name" />
+          <button id="rec-save" class="big-btn gold" disabled>💾 저장</button>
+        </div>
+        <p class="rec-status" id="rec-status">● 녹음을 누르고 오카리나를 연주하세요 — 연주한 리듬 그대로 악보가 됩니다 (최대 32음).</p>
+        <div id="rec-take" class="rec-take" aria-live="off"></div>
+      </div>
+
+      <div class="panel-card">
+        <h3 class="pc-title">🌾 허수아비의 노래 <span>Scarecrow's Song</span></h3>
+        <p class="pc-desc">게임 속 보누루처럼, 정확히 <b>8음</b>으로 나만의 곡을 등록하세요. 자유 연주 중 이 곡도 인식됩니다.</p>
+        <div class="rec-controls">
+          <button id="scare-btn" class="big-btn">● 8음 등록</button>
+          <button id="scare-clear" class="big-btn" hidden>✕ 지우기</button>
+        </div>
+        <div id="scare-status" class="rec-take"></div>
+      </div>
+
+      <div class="panel-head"><h3>내 노래 <span id="comp-count"></span></h3></div>
+      <div id="comp-list" class="song-grid"></div>
+    </section>
+
+    <!-- ================================ Games ================================ -->
+    <section id="panel-games" class="tabpanel" role="tabpanel" aria-labelledby="tabbtn-games" data-keys-ok hidden>
+      <div class="panel-head"><h2>미니게임 <span>Games of Hyrule</span></h2></div>
+
+      <div class="panel-card game-card" id="g-rhythm">
+        <h3 class="pc-title">🎯 리듬 챌린지 <span>Rhythm Challenge</span></h3>
+        <p class="pc-desc">흘러오는 음표가 판정선에 닿는 순간, 해당 버튼을 누르세요. Perfect ±90ms · Good ±220ms.</p>
+        <div class="g-controls">
+          <select id="rg-song" aria-label="곡 선택"></select>
+          <button id="rg-start" class="big-btn gold">▶ 시작</button>
+          <button id="rg-stop" class="big-btn" hidden>■ 중지</button>
+          <span class="g-best" id="rg-best"></span>
+        </div>
+        <div class="rg-lane" id="rg-lane" hidden><div class="rg-hitline" aria-hidden="true"></div></div>
+        <div class="g-hud" id="rg-hud" hidden>
+          <span>점수 <b id="rg-score">0</b></span><span id="rg-combo"></span><span id="rg-judge"></span>
+        </div>
+        <div class="g-result" id="rg-result" hidden></div>
+      </div>
+
+      <div class="panel-card game-card" id="g-quiz">
+        <h3 class="pc-title">🧠 멜로디 퀴즈 <span>Melody Quiz</span></h3>
+        <p class="pc-desc">소리만 듣고 어떤 곡인지 맞혀보세요 — 버튼 불빛 없이 재생됩니다.</p>
+        <div class="g-controls">
+          <button id="qz-play" class="big-btn gold">🔊 문제 듣기</button>
+          <span class="g-best">연속 정답 <b id="qz-streak">0</b> · 최고 <b id="qz-best">0</b></span>
+        </div>
+        <div id="qz-choices" class="qz-choices"></div>
+        <p id="qz-msg" class="g-msg"></p>
+      </div>
+
+      <div class="panel-card game-card" id="g-simon">
+        <h3 class="pc-title">🔁 메아리 게임 <span>Echo (Simon)</span></h3>
+        <p class="pc-desc">오카리나가 들려주는 멜로디를 그대로 따라 연주하세요. 라운드마다 한 음씩 길어집니다.</p>
+        <div class="g-controls">
+          <button id="sm-start" class="big-btn gold">▶ 시작</button>
+          <span class="g-best">레벨 <b id="sm-level">–</b> · 최고 <b id="sm-best">0</b></span>
+        </div>
+        <p id="sm-msg" class="g-msg"></p>
+      </div>
+    </section>
+
+    <!-- =============================== Progress ============================== -->
+    <section id="panel-progress" class="tabpanel" role="tabpanel" aria-labelledby="tabbtn-progress" hidden>
+      <div class="panel-head"><h2>나의 기록 <span>Progress &amp; Achievements</span></h2></div>
+      <div class="stat-grid" id="stat-grid"></div>
+      <div class="panel-head"><h3>도전과제 <span id="ach-count"></span></h3></div>
+      <div class="ach-grid" id="ach-grid"></div>
+      <div class="g-controls reset-row"><button id="reset-progress" class="ghost-btn">기록 초기화 Reset</button></div>
+    </section>
   </main>
+
+  <!-- silent achievement toasts (visual only) -->
+  <div id="ach-toast" class="ach-toast" aria-live="polite"></div>
 
   <footer class="site-foot">
     <p>A fan-made tribute to <i>The Legend of Zelda: Ocarina of Time</i>. Built with the Web Audio API — no plugins, no downloads.</p>
@@ -244,5 +338,8 @@
 
   <script src="assets/songs.js"></script>
   <script src="assets/ocarina.js"></script>
+  <script src="assets/progress.js"></script>
+  <script src="assets/studio.js"></script>
+  <script src="assets/games.js"></script>
 </body>
 </html>
