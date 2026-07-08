@@ -121,6 +121,21 @@ main { position: relative; z-index: 1; max-width: 1040px; margin: 0 auto; paddin
 .hole { stroke: rgba(4,12,22,.9); stroke-width: 1.15; transition: fill .08s ease, filter .22s ease; }
 .hole.lit { fill: var(--glow, var(--gold)); filter: drop-shadow(0 0 15px var(--glow, var(--gold))); }
 
+/* generated photo ocarina — glowing note-hole overlays replace the SVG holes */
+.ocarina-photo { position: relative; display: block; }
+.ocarina-photo .oca-img { width: 100%; height: auto; display: block; -webkit-user-drag: none; user-select: none; }
+.ocarina-photo .oca-holes, .ocarina-photo .oca-hits { position: absolute; inset: 0; pointer-events: none; }
+.ocarina-photo .hole {
+  position: absolute; width: 8%; aspect-ratio: 1; transform: translate(-50%, -50%);
+  border-radius: 50%; opacity: 0; transition: opacity .12s ease; mix-blend-mode: screen;
+  background: radial-gradient(circle, var(--glow, #ffe8a8) 0%, var(--glow, #ffe8a8) 16%, transparent 66%);
+}
+.ocarina-photo .hole.lit { opacity: 1; }
+.ocarina-photo .hit {
+  position: absolute; width: 12%; aspect-ratio: 1; transform: translate(-50%, -50%);
+  border-radius: 50%; cursor: pointer; pointer-events: auto; touch-action: none;
+}
+
 /* button pad --------------------------------------------------------------- */
 .pad { display: flex; align-items: center; justify-content: center; gap: 30px; flex-wrap: wrap; margin-top: 4px; }
 .cpad {
@@ -221,7 +236,10 @@ main { position: relative; z-index: 1; max-width: 1040px; margin: 0 auto; paddin
 
 .song-card {
   --accent: var(--gold);
-  background: linear-gradient(180deg, rgba(243,231,201,.97), rgba(228,213,176,.97));
+  background:
+    linear-gradient(180deg, rgba(243,231,201,.84), rgba(228,213,176,.88)),
+    url("img/parchment.webp");
+  background-size: cover; background-position: center;
   color: #2a2110; border-radius: 14px; padding: 14px 16px 16px;
   border: 1px solid rgba(120,90,30,.35); border-top: 4px solid var(--accent);
   box-shadow: 0 10px 26px rgba(0,0,0,.4); position: relative; overflow: hidden;
