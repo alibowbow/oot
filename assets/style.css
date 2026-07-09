@@ -400,13 +400,24 @@ main { position: relative; z-index: 1; max-width: 1040px; margin: 0 auto; paddin
 .tempo button.on { background: rgba(246,198,31,.85); color: #1a1407; font-weight: 700; }
 
 /* header collection tally --------------------------------------------------- */
-.tally-line { margin: 8px 0 0; }
+.tally-line { margin: 8px 0 0; display: flex; align-items: center; justify-content: center; gap: 8px; flex-wrap: wrap; }
 .tally-badge {
   display: inline-block; font-size: .8rem; color: var(--gold-soft);
   background: rgba(246,198,31,.1); border: 1px solid rgba(246,198,31,.3);
   border-radius: 14px; padding: 3px 12px;
 }
 #tally { font-weight: 700; color: var(--gold); }
+
+/* share-this-app button (header) ------------------------------------------- */
+.share-app {
+  font: inherit; font-size: .8rem; color: var(--gold-soft); cursor: pointer;
+  background: rgba(246,198,31,.12); border: 1px solid rgba(246,198,31,.4);
+  border-radius: 14px; padding: 3px 12px; line-height: 1.4;
+  transition: background .15s ease, transform .1s ease, box-shadow .15s ease;
+}
+.share-app .en { opacity: .6; }
+.share-app:hover { background: rgba(246,198,31,.24); box-shadow: 0 0 14px rgba(246,198,31,.35); }
+.share-app:active { transform: translateY(1px); }
 
 /* a learned song keeps a small gold Triforce seal + steady accent glow ------ */
 .song-card.learned { box-shadow: 0 10px 26px rgba(0,0,0,.4), inset 0 0 0 1px rgba(246,198,31,.4); }
