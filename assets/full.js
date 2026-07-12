@@ -114,6 +114,29 @@
     document.querySelectorAll('.full-chart').forEach((box) => { box.innerHTML = chartHTML(id); });
   }
 
+  // Mirror the fingering on the ocarina photo itself, like the Zelda-mode
+  // hole glow: gold = cover this hole, blue ring = leave it open.
+  const fingLayer = document.querySelector('.oca-fing');
+  let photoClearT = 0;
+  function updatePhoto(id, transientMs) {
+    if (!fingLayer) return;
+    clearTimeout(photoClearT);
+    const f = FINGERINGS[id];
+    if (!f) return;
+    const closed = new Set(f.closed);
+    fingLayer.querySelectorAll('.fhole').forEach((el) => {
+      const covered = closed.has(el.dataset.fhole);
+      el.classList.toggle('press', covered);
+      el.classList.toggle('open', !covered);
+    });
+    if (transientMs) photoClearT = setTimeout(clearPhoto, transientMs);
+  }
+  function clearPhoto() {
+    clearTimeout(photoClearT);
+    if (!fingLayer) return;
+    fingLayer.querySelectorAll('.fhole').forEach((el) => el.classList.remove('press', 'open'));
+  }
+
   function startNote(id) {
     if (!NOTES[id] || active.has(id)) return;
     active.add(id);
@@ -121,6 +144,7 @@
     api.synth.noteOn('F:' + id, NOTES[id].freq);
     eachKey(id, (el) => el.classList.add('on'));
     updateChart(id);
+    updatePhoto(id);
     noteSubs.forEach((f) => { try { f(id); } catch (e) { /* listener error */ } });
     if (OOT.progress) OOT.progress.event('fullnote');
   }
@@ -129,6 +153,8 @@
     if (!active.delete(id)) return;
     api.synth.noteOff('F:' + id);
     eachKey(id, (el) => el.classList.remove('on'));
+    // once every key is up, let the photo's fingering linger a beat, then fade
+    if (active.size === 0) photoClearT = setTimeout(clearPhoto, 280);
     endSubs.forEach((f) => { try { f(id); } catch (e) { /* listener error */ } });
   }
 
@@ -144,6 +170,7 @@
       setTimeout(() => { if (!active.has(id)) el.classList.remove('on'); }, Math.min(900, dur * 1000));
     });
     updateChart(id);
+    updatePhoto(id, Math.min(900, dur * 1000));
   }
 
   /* ------------------------------------------------------ Keyboard factory */
@@ -254,6 +281,7 @@
     if (fullKit) fullKit.hidden = !full;
     api.stopAll();
     stopAllFull();
+    clearPhoto();
     // repertoire playback / practice and games listen for this
     document.dispatchEvent(new CustomEvent('oot:stop'));
   }
