@@ -19,6 +19,7 @@
   const rgSel = $('#rg-song'), rgStart = $('#rg-start'), rgStop = $('#rg-stop');
   const rgField = $('#rg-field'), rgStage = $('#rg-stage'), rgResult = $('#rg-result');
   const rgScoreEl = $('#rg-score'), rgComboEl = $('#rg-combo'), rgJudgeEl = $('#rg-judge'), rgBestEl = $('#rg-best');
+  const rgNowEl = $('#rg-now'), rgNextEl = $('#rg-next');
 
   let rg = { on: false, chips: [], raf: 0 };
   let rhythmBest = readLS('oot-rhythm', {});
@@ -62,7 +63,9 @@
   }
 
   if (rgSel) {
-    rgSel.innerHTML = SONGS.map((s) => `<option value="${s.id}">${s.name} · ${s.nameKo}</option>`).join('');
+    rgSel.innerHTML =
+      '<option value="medley">🎲 랜덤 메들리 — 여러 곡 연속</option>' +
+      SONGS.map((s) => `<option value="${s.id}">${s.name} · ${s.nameKo}</option>`).join('');
     rgSel.addEventListener('change', showRgBest);
     showRgBest();
   }
@@ -72,30 +75,60 @@
     rgBestEl.textContent = b ? `최고 ${b.score}점 · ${b.grade}` : '기록 없음';
   }
 
+  const MEDLEY_GAP = 1400;               // breather between medley songs (ms)
+
+  // A song's rhythm-game chart: the input phrase plus the melody that follows.
+  // Core songs carry their theme's continuation (`ext`); warp songs reprise
+  // their phrase once more, as the in-game playback does.
+  function fullNotes(song) {
+    if (song.ext) return song.notes.concat(song.ext);
+    const reprise = song.notes.map((n, i, a) => (i === a.length - 1 ? [n[0], n[1] + 1] : n));
+    return song.notes.concat(reprise);
+  }
+
+  function randomSong(except) {
+    let s;
+    do { s = SONGS[rand(SONGS.length)]; } while (SONGS.length > 1 && s === except);
+    return s;
+  }
+
+  // Lay a song's chips into the lanes; the first note reaches the judgment
+  // line at tFirst. Returns the time the last note ends.
+  function spawnSong(song, tFirst) {
+    const beatMs = 60000 / song.bpm;
+    let acc = 0;
+    fullNotes(song).forEach(([id, beats]) => {
+      const el = document.createElement('span');
+      el.className = 'rg-chip' + (id === 'A' ? ' a' : '');
+      el.textContent = NOTES[id].arrow;
+      rgCols[id].appendChild(el);
+      rg.chips.push({ id, el, tHit: tFirst + acc * beatMs, judged: false });
+      acc += beats;
+    });
+    return tFirst + acc * beatMs;
+  }
+
   function rhythmStart() {
     stopGames();
     api.stopAll();
-    const song = SONGS.find((s) => s.id === rgSel.value) || SONGS[0];
+    const medley = rgSel.value === 'medley';
+    const song = medley ? randomSong(null) : (SONGS.find((s) => s.id === rgSel.value) || SONGS[0]);
     rgField.hidden = false; rgResult.hidden = true;
     rgField.classList.remove('open');
     void rgField.offsetWidth;              // restart the open animation
     rgField.classList.add('open');
     rgStart.hidden = true; rgStop.hidden = false;
+    rgStop.textContent = medley ? '■ 그만하기 (결과 보기)' : '■ 중지';
     rgScoreEl.textContent = '0'; rgComboEl.textContent = '';
-    rgJudgeEl.textContent = '♪ 준비…'; rgJudgeEl.className = 'rg-pop hold';
+    if (rgNowEl) rgNowEl.textContent = ''; if (rgNextEl) rgNextEl.textContent = '';
+    rgJudgeEl.textContent = '♪ ' + song.nameKo; rgJudgeEl.className = 'rg-pop hold';
 
-    rg = { on: true, song, chips: [], raf: 0, score: 0, combo: 0, maxCombo: 0, counts: { P: 0, G: 0, M: 0 }, judged: 0 };
-    const beatMs = 60000 / song.bpm;
+    rg = { on: true, medley, chips: [], raf: 0, score: 0, combo: 0, maxCombo: 0,
+           counts: { P: 0, G: 0, M: 0 }, judged: 0, songsStarted: 0,
+           lastSong: song, lastEnd: 0, pending: null };
     const t0 = performance.now() + 800 + APPROACH;   // lead-in before the first hit
-    let acc = 0;
-    song.notes.forEach(([id, beats]) => {
-      const el = document.createElement('span');
-      el.className = 'rg-chip' + (id === 'A' ? ' a' : '');
-      el.textContent = NOTES[id].arrow;
-      rgCols[id].appendChild(el);
-      rg.chips.push({ id, el, tHit: t0 + acc * beatMs, judged: false });
-      acc += beats;
-    });
+    rg.lastEnd = spawnSong(song, t0);
+    rg.pending = { name: song.nameKo, t: t0 };
     rgField.scrollIntoView({ behavior: api.prefersReduce() ? 'auto' : 'smooth', block: 'center' });
     rg.raf = requestAnimationFrame(rhythmFrame);
   }
@@ -103,6 +136,27 @@
   function rhythmFrame() {
     if (!rg.on) return;
     const now = performance.now();
+
+    // flip the "now playing" label as each queued song reaches the line
+    if (rg.pending && now >= rg.pending.t) {
+      rg.songsStarted++;
+      if (rgNowEl) rgNowEl.textContent = (rg.medley ? `${rg.songsStarted}곡째 ` : '') + '♪ ' + rg.pending.name;
+      if (rgNextEl) rgNextEl.textContent = '';
+      rg.pending = null;
+    }
+    // medley: queue another random song so the notes never stop falling
+    if (rg.medley && !rg.pending) {
+      const nextFirst = rg.lastEnd + MEDLEY_GAP;
+      if (now >= nextFirst - APPROACH - 500) {
+        const next = randomSong(rg.lastSong);
+        rg.lastEnd = spawnSong(next, nextFirst);
+        rg.lastSong = next;
+        rg.pending = { name: next.nameKo, t: nextFirst };
+        if (rgNextEl) rgNextEl.textContent = '다음 ♪ ' + next.nameKo;
+        rg.chips = rg.chips.filter((c) => !c.judged);   // prune finished chips
+      }
+    }
+
     const laneH = rgCols[LANES[0]].clientHeight || 420;
     const hitY = laneH - HIT_OFF;          // where a chip's center lands at tHit
     rg.chips.forEach((c) => {
@@ -111,7 +165,7 @@
       c.el.style.transform = `translateY(${y}px)`;
       if (now - c.tHit > 220) judge(c, 'M');
     });
-    if (rg.judged >= rg.chips.length) { rhythmEnd(); return; }
+    if (!rg.medley && rg.judged >= rg.chips.length) { rhythmEnd(); return; }
     rg.raf = requestAnimationFrame(rhythmFrame);
   }
 
@@ -139,6 +193,8 @@
       rg.maxCombo = Math.max(rg.maxCombo, rg.combo);
       c.el.classList.add(k === 'P' ? 'p' : 'g');
     }
+    const el = c.el;                       // free the DOM once the fade ends
+    setTimeout(() => { if (el.isConnected) el.remove(); }, 700);
     rgScoreEl.textContent = rg.score;
     rgComboEl.textContent = rg.combo > 1 ? `콤보 ×${rg.combo}` : '';
     // center flash, beatmania style — retrigger the pop animation each judgment
@@ -149,20 +205,23 @@
   }
 
   function rhythmEnd() {
-    const max = rg.chips.length * 100;
+    // in a medley, grade what was actually judged so far; else the whole chart
+    const total = rg.medley ? rg.judged : rg.chips.length;
+    const max = total * 100;
     const pct = max ? rg.score / max : 0;
     const grade = pct >= 0.95 ? 'S' : pct >= 0.8 ? 'A' : pct >= 0.6 ? 'B' : 'C';
-    const prev = rhythmBest[rg.song.id];
+    const key = rg.medley ? 'medley' : rg.lastSong.id;
+    const prev = rhythmBest[key];
     if (!prev || rg.score > prev.score) {
-      rhythmBest[rg.song.id] = { score: rg.score, grade };
+      rhythmBest[key] = { score: rg.score, grade };
       writeLS('oot-rhythm', rhythmBest);
     }
     rgResult.hidden = false;
     rgResult.innerHTML =
       `<b class="grade g-${grade.toLowerCase()}">${grade}</b>` +
-      `<span>점수 <b>${rg.score}</b> / ${max} · 최대 콤보 ×${rg.maxCombo}</span>` +
+      `<span>${rg.medley ? `메들리 ${rg.songsStarted}곡 · ` : ''}점수 <b>${rg.score}</b> / ${max} · 최대 콤보 ×${rg.maxCombo}</span>` +
       `<span class="counts">Perfect ${rg.counts.P} · Good ${rg.counts.G} · Miss ${rg.counts.M}</span>`;
-    if (OOT.progress) OOT.progress.event('rhythm', { songId: rg.song.id, score: rg.score, grade });
+    if (OOT.progress) OOT.progress.event('rhythm', { songId: key, score: rg.score, grade });
     rhythmStop(true);
     showRgBest();
   }
@@ -177,12 +236,21 @@
       rgField.classList.remove('open');
     }
     if (!keepResult && rgResult) rgResult.hidden = true;
+    if (rgNowEl) rgNowEl.textContent = '';
+    if (rgNextEl) rgNextEl.textContent = '';
     if (rgStart) rgStart.hidden = false;
     if (rgStop) rgStop.hidden = true;
   }
 
   if (rgStart) rgStart.addEventListener('click', rhythmStart);
-  if (rgStop) rgStop.addEventListener('click', () => rhythmStop(false));
+  if (rgStop) rgStop.addEventListener('click', () => {
+    // quitting mid-run still deserves a result screen (medley has no natural end)
+    if (rg.on && rg.judged > 0) rhythmEnd();
+    else rhythmStop(false);
+  });
+
+  // tiny read-only probe for tests/debugging
+  OOT._rg = () => ({ on: rg.on, medley: !!rg.medley, songs: rg.songsStarted || 0, judged: rg.judged || 0, chips: rg.chips.length });
 
   /* ========================================================== Melody quiz */
   const qzPlay = $('#qz-play'), qzChoices = $('#qz-choices'), qzMsg = $('#qz-msg');
