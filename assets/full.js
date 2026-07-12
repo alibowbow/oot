@@ -55,24 +55,43 @@
   const HOLES = ['L1', 'L2', 'L3', 'L4', 'SL', 'R1', 'R2', 'R3', 'R4', 'SR', 'TL', 'TR'];
   const LADDER = { D5: 'R4', E5: 'R3', F5: 'R2', G5: 'R1', A5: 'L3', B5: 'L2',
                    C6: 'L1', D6: 'TL', E6: 'TR', F6: 'L4' };
-  const FINGERINGS = {};                 // note id -> { closed: [...], cross }
+  // Sharps ARE playable on a real ocarina — by cross-fingering (re-closing a
+  // hole below the open ladder) or half-holing (◐). These are the common
+  // charts' versions; makers differ, so they stay flagged as `cross`.
+  //   C#5 = C5 grip + right pinky half    D#5 = open ring, RE-CLOSE pinky
+  //   F#5 = open middle, re-close ring    G#5 = open left ring, re-close R index
+  //   A#5 = open left middle, re-close left ring
+  //   C#6 = C6 grip + left thumb half     D#6 = D6 grip + right thumb half
+  const SHARP_GRIPS = {
+    'A#4': { open: ['SR'], half: [], cross: false },   // standard subhole vent
+    'C#5': { open: ['SL', 'SR'], half: ['R4'] },
+    'D#5': { open: ['SL', 'SR', 'R3'], half: [] },
+    'F#5': { open: ['SL', 'SR', 'R4', 'R2'], half: [] },
+    'G#5': { open: ['SL', 'SR', 'R4', 'R3', 'R2', 'L3'], half: [] },
+    'A#5': { open: ['SL', 'SR', 'R4', 'R3', 'R2', 'R1', 'L2'], half: [] },
+    'C#6': { open: ['SL', 'SR', 'R4', 'R3', 'R2', 'R1', 'L3', 'L2', 'L1'], half: ['TL'] },
+    'D#6': { open: ['SL', 'SR', 'R4', 'R3', 'R2', 'R1', 'L3', 'L2', 'L1', 'TL'], half: ['TR'] },
+  };
+  const FINGERINGS = {};                 // note id -> { closed: [...], half: [...], cross }
   (function buildFingerings() {
-    const set = (id, open, cross) => {
-      FINGERINGS[id] = { closed: HOLES.filter((h) => !open.includes(h)), cross: !!cross };
+    const set = (id, open, half, cross) => {
+      FINGERINGS[id] = {
+        closed: HOLES.filter((h) => !open.includes(h) && !half.includes(h)),
+        half,
+        cross: !!cross,
+      };
     };
-    set('A4', []);
-    set('A#4', ['SR']);                  // standard subhole fingerings, not cross
-    set('B4', ['SL']);
+    set('A4', [], []);
+    set('B4', ['SL'], []);
     let open = ['SL', 'SR'];
-    set('C5', open);
-    SEQ.slice(SEQ.indexOf('C5') + 1).forEach((id) => {
-      if (!NOTES[id].sharp) {
+    set('C5', open, []);
+    SEQ.forEach((id) => {
+      if (NOTES[id].sharp) {
+        const g = SHARP_GRIPS[id];
+        set(id, g.open, g.half, g.cross !== false);
+      } else if (LADDER[id]) {
         open = open.concat(LADDER[id]);
-        set(id, open);
-      } else {
-        // semitones above C5 are half-hole / cross fingerings that differ by
-        // maker — show the neighboring diatonic grip and say so
-        set(id, open, true);
+        set(id, open, []);
       }
     });
   })();
@@ -81,9 +100,12 @@
     const f = FINGERINGS[id];
     if (!f) return '';
     const closed = new Set(f.closed);
+    const half = new Set(f.half);
+    const state = (h) => (closed.has(h) ? 'closed' : half.has(h) ? 'half' : 'open');
+    const WORD = { closed: '막음', half: '반만 막음', open: '엶' };
     const hole = (h, label, small) =>
-      `<span class="fh-wrap"><span class="fh${small ? ' small' : ''}${closed.has(h) ? ' closed' : ''}" role="img" ` +
-      `aria-label="${label} ${closed.has(h) ? '막음' : '엶'}"></span>` +
+      `<span class="fh-wrap"><span class="fh${small ? ' small' : ''} ${state(h) === 'open' ? '' : state(h)}" role="img" ` +
+      `aria-label="${label} ${WORD[state(h)]}"></span>` +
       `<span class="fh-label" aria-hidden="true">${label}</span></span>`;
     return `<div class="fing">` +
       `<div class="fing-row"><span class="fing-side">앞면 · 왼손</span>` +
@@ -92,7 +114,7 @@
       hole('R1', '검지') + hole('R2', '중지') + hole('R3', '약지') + hole('R4', '새끼') + hole('SR', '보조', true) + `</div>` +
       `<div class="fing-row"><span class="fing-side">뒷면 · 엄지</span>` + hole('TL', '왼엄지') + hole('TR', '오른엄지') + `</div>` +
       `</div>` +
-      `<p class="fing-note">${fullName(id)}${f.cross ? ' — 교차 운지 (제조사별 상이, 악기 운지표 확인)' : ''}</p>`;
+      `<p class="fing-note">${fullName(id)}${f.half.length ? ' — ◐ 반홀' : ''}${f.cross ? ' · 교차 운지 (제조사별 상이, 악기 운지표 확인)' : ''}</p>`;
   }
 
   function fullName(id) { return `${NOTES[id].label} (${id})`; }
@@ -124,17 +146,19 @@
     const f = FINGERINGS[id];
     if (!f) return;
     const closed = new Set(f.closed);
+    const half = new Set(f.half);
     fingLayer.querySelectorAll('.fhole').forEach((el) => {
-      const covered = closed.has(el.dataset.fhole);
-      el.classList.toggle('press', covered);
-      el.classList.toggle('open', !covered);
+      const h = el.dataset.fhole;
+      el.classList.toggle('press', closed.has(h));
+      el.classList.toggle('half', half.has(h));
+      el.classList.toggle('open', !closed.has(h) && !half.has(h));
     });
     if (transientMs) photoClearT = setTimeout(clearPhoto, transientMs);
   }
   function clearPhoto() {
     clearTimeout(photoClearT);
     if (!fingLayer) return;
-    fingLayer.querySelectorAll('.fhole').forEach((el) => el.classList.remove('press', 'open'));
+    fingLayer.querySelectorAll('.fhole').forEach((el) => el.classList.remove('press', 'half', 'open'));
   }
 
   function startNote(id) {
@@ -206,7 +230,8 @@
           b.className = 'k-black';
           b.dataset.note = sharpId;
           b.setAttribute('aria-label', `${fullName(sharpId)}, 키 ${NOTES[sharpId].key}`);
-          b.innerHTML = `<span class="k-kbd">${NOTES[sharpId].key}</span>`;
+          b.innerHTML = `<span class="k-sol">${NOTES[sharpId].label}</span>` +
+            `<span class="k-kbd">${NOTES[sharpId].key}</span>`;
           w.appendChild(b);
         }
         row.appendChild(w);
