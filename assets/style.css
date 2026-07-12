@@ -16,6 +16,9 @@
 
 * { box-sizing: border-box; }
 
+/* the hidden attribute must always win, even over display:flex/grid rules */
+[hidden] { display: none !important; }
+
 html { scroll-behavior: smooth; }
 
 body {
@@ -551,28 +554,87 @@ select, #rec-name {
 .g-best b { color: var(--gold); }
 .g-msg { color: var(--gold-soft); font-size: .9rem; min-height: 1.4em; margin: 10px 0 2px; }
 
-.rg-lane {
-  position: relative; height: 84px; margin-top: 10px; overflow: hidden;
-  background: linear-gradient(90deg, rgba(246,198,31,.10), rgba(10,20,44,.6) 30%);
-  border: 1px solid rgba(246,198,31,.25); border-radius: 12px;
+/* beatmania-style vertical playfield ---------------------------------------- */
+.rg-field {
+  position: relative; margin-top: 12px; height: clamp(420px, 66vh, 640px);
+  border: 1px solid rgba(246,198,31,.3); border-radius: 14px; overflow: hidden;
+  background: linear-gradient(180deg, rgba(8,14,32,.92), rgba(12,22,48,.96));
+  box-shadow: inset 0 0 46px rgba(0,0,0,.55);
+}
+.rg-field.open { animation: rg-open .35s ease; }
+@keyframes rg-open { from { opacity: 0; transform: translateY(-14px) scaleY(.96); } }
+.rg-fhud {
+  position: absolute; top: 8px; left: 12px; right: 12px; z-index: 3; pointer-events: none;
+  display: flex; gap: 14px; align-items: baseline;
+  color: rgba(222,233,255,.85); font-size: .9rem; text-shadow: 0 1px 3px rgba(0,0,0,.8);
+}
+.rg-fhud b { color: var(--gold); font-size: 1.1rem; }
+#rg-combo { color: #ffd75e; font-weight: 700; }
+
+.rg-stage { position: absolute; inset: 0; display: flex; }
+.rg-col { flex: 1; display: flex; flex-direction: column; border-right: 1px solid rgba(120,140,190,.14); min-width: 0; }
+.rg-col:last-child { border-right: 0; }
+.rg-col.alt .rg-notes { background: rgba(255,255,255,.03); }
+.rg-col.a .rg-notes { background: rgba(90,120,255,.06); }
+.rg-notes { position: relative; flex: 1; overflow: hidden; }
+/* lane beam while its note sounds */
+.rg-notes::after {
+  content: ''; position: absolute; inset: 0; pointer-events: none;
+  background: linear-gradient(180deg, transparent 30%, rgba(246,198,31,.24));
+  opacity: 0; transition: opacity .12s ease;
+}
+.rg-col.a .rg-notes::after { background: linear-gradient(180deg, transparent 30%, rgba(110,140,255,.28)); }
+.rg-col.on .rg-notes::after { opacity: 1; }
+
+.rg-key {
+  height: 56px; border: 0; border-top: 2px solid rgba(246,198,31,.5); border-radius: 0;
+  background: linear-gradient(180deg, #23305c, #172244); color: var(--gold);
+  font: inherit; font-size: 1.25rem; cursor: pointer;
+  touch-action: none; user-select: none; -webkit-user-select: none;
+}
+.rg-col.a .rg-key { color: #9fb4ff; border-top-color: rgba(110,140,255,.6); }
+.rg-col.on .rg-key {
+  background: linear-gradient(180deg, #3a4a85, #22305f);
+  box-shadow: inset 0 0 18px rgba(246,198,31,.45);
 }
 .rg-hitline {
-  position: absolute; left: 64px; top: 6px; bottom: 6px; width: 3px; border-radius: 2px;
+  position: absolute; left: 0; right: 0; bottom: 70px; height: 3px; z-index: 2; pointer-events: none;
   background: var(--gold); box-shadow: 0 0 12px rgba(246,198,31,.8);
 }
+
 .rg-chip {
-  position: absolute; left: 0; top: 50%; margin-top: -19px; width: 38px; height: 38px;
-  display: grid; place-items: center; border-radius: 9px; font-size: 1.1rem;
-  background: var(--c); color: #2a1f08; border: 1px solid rgba(0,0,0,.3);
-  box-shadow: inset 0 -2px 0 rgba(0,0,0,.2); will-change: transform;
+  position: absolute; left: 10%; width: 80%; height: 22px; top: -11px;
+  display: grid; place-items: center; border-radius: 6px; font-size: .8rem;
+  background: linear-gradient(180deg, #ffe08a, var(--gold)); color: #2a1f08;
+  border: 1px solid rgba(0,0,0,.35);
+  box-shadow: 0 0 10px rgba(246,198,31,.45), inset 0 -2px 0 rgba(0,0,0,.25);
+  will-change: transform;
 }
-.rg-chip.a { color: #fff; }
+.rg-chip.a {
+  background: linear-gradient(180deg, #9fb4ff, #5a78ff); color: #fff;
+  box-shadow: 0 0 10px rgba(110,140,255,.5), inset 0 -2px 0 rgba(0,0,0,.25);
+}
 .rg-chip.p { background: #7be08a; box-shadow: 0 0 14px #7be08a; transition: opacity .3s; opacity: 0; }
 .rg-chip.g { background: #e0d47b; box-shadow: 0 0 10px #e0d47b; transition: opacity .3s; opacity: 0; }
 .rg-chip.m { filter: grayscale(1) brightness(.55); transition: opacity .4s; opacity: 0; }
-.g-hud { display: flex; gap: 16px; align-items: baseline; margin-top: 10px; color: rgba(222,233,255,.8); font-size: .9rem; }
-.g-hud b { color: var(--gold); font-size: 1.05rem; }
-#rg-judge { font-weight: 700; letter-spacing: .06em; }
+
+/* center judgment flash (PERFECT! / GOOD / MISS) */
+.rg-pop {
+  position: absolute; left: 0; right: 0; top: 34%; z-index: 3; pointer-events: none;
+  text-align: center; font-weight: 800; font-size: 1.7rem; letter-spacing: .1em;
+  text-shadow: 0 2px 10px rgba(0,0,0,.75); opacity: 0;
+}
+.rg-pop.hold { opacity: 1; }
+.rg-pop.pop { animation: rg-pop .55s ease; }
+@keyframes rg-pop {
+  0%   { opacity: 1; transform: scale(1.28); }
+  70%  { opacity: 1; transform: scale(1); }
+  100% { opacity: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .rg-field.open { animation: none; }
+  .rg-pop.pop { animation: none; opacity: 1; }
+}
 #rg-judge.j-p { color: #7be08a; }
 #rg-judge.j-g { color: #e0d47b; }
 #rg-judge.j-m { color: #e08a7b; }

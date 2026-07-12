@@ -12,14 +12,54 @@
   const NOTE_IDS = ['A', 'down', 'right', 'up', 'left'];
 
   /* ========================================================= Rhythm game */
-  const APPROACH = 2600;                 // ms a chip travels before the hit line
-  const HIT_X = 64;                      // hit-line x inside the lane
+  const APPROACH = 2600;                 // ms a note falls before the hit line
+  const HIT_OFF = 14;                    // hit line sits this many px above the keys
+  const CHIP_H = 22;                     // must match .rg-chip height
+  const LANES = ['left', 'down', 'up', 'right', 'A'];   // bottom-key order
   const rgSel = $('#rg-song'), rgStart = $('#rg-start'), rgStop = $('#rg-stop');
-  const rgLane = $('#rg-lane'), rgHud = $('#rg-hud'), rgResult = $('#rg-result');
+  const rgField = $('#rg-field'), rgStage = $('#rg-stage'), rgResult = $('#rg-result');
   const rgScoreEl = $('#rg-score'), rgComboEl = $('#rg-combo'), rgJudgeEl = $('#rg-judge'), rgBestEl = $('#rg-best');
 
   let rg = { on: false, chips: [], raf: 0 };
   let rhythmBest = readLS('oot-rhythm', {});
+  const rgCols = {};                     // note id → that lane's .rg-notes box
+
+  // Build the five beatmania-style lanes: falling-note box + a key underneath.
+  // The keys are real instrument buttons (hold to sustain), so the game is
+  // played right on the field — keyboard arrows / A still work as before.
+  if (rgStage) {
+    LANES.forEach((id, i) => {
+      const col = document.createElement('div');
+      col.className = 'rg-col' + (i % 2 ? ' alt' : '') + (id === 'A' ? ' a' : '');
+      col.dataset.note = id;
+      const notes = document.createElement('div');
+      notes.className = 'rg-notes';
+      const key = document.createElement('button');
+      key.type = 'button';
+      key.className = 'rg-key';
+      key.textContent = NOTES[id].arrow;
+      key.setAttribute('aria-label', `${NOTES[id].key} 레인 (${NOTES[id].pitch})`);
+      col.appendChild(notes);
+      col.appendChild(key);
+      rgStage.appendChild(col);
+      rgCols[id] = notes;
+
+      let held = false;
+      key.addEventListener('pointerdown', (e) => {
+        e.preventDefault();
+        held = true;
+        try { key.setPointerCapture(e.pointerId); } catch (err) { /* ignore */ }
+        api.startNote(id);
+      });
+      const release = () => { if (held) { held = false; api.endNote(id); } };
+      key.addEventListener('pointerup', release);
+      key.addEventListener('pointercancel', release);
+      key.addEventListener('contextmenu', (e) => e.preventDefault());
+    });
+    // light the whole lane while its note sounds, whatever the input source
+    api.onNote((id) => { const c = rgStage.querySelector(`.rg-col[data-note="${id}"]`); if (c) c.classList.add('on'); });
+    api.onNoteEnd((id) => { const c = rgStage.querySelector(`.rg-col[data-note="${id}"]`); if (c) c.classList.remove('on'); });
+  }
 
   if (rgSel) {
     rgSel.innerHTML = SONGS.map((s) => `<option value="${s.id}">${s.name} · ${s.nameKo}</option>`).join('');
@@ -36,9 +76,13 @@
     stopGames();
     api.stopAll();
     const song = SONGS.find((s) => s.id === rgSel.value) || SONGS[0];
-    rgLane.hidden = false; rgHud.hidden = false; rgResult.hidden = true;
+    rgField.hidden = false; rgResult.hidden = true;
+    rgField.classList.remove('open');
+    void rgField.offsetWidth;              // restart the open animation
+    rgField.classList.add('open');
     rgStart.hidden = true; rgStop.hidden = false;
-    rgScoreEl.textContent = '0'; rgComboEl.textContent = ''; rgJudgeEl.textContent = '♪ 준비…';
+    rgScoreEl.textContent = '0'; rgComboEl.textContent = '';
+    rgJudgeEl.textContent = '♪ 준비…'; rgJudgeEl.className = 'rg-pop hold';
 
     rg = { on: true, song, chips: [], raf: 0, score: 0, combo: 0, maxCombo: 0, counts: { P: 0, G: 0, M: 0 }, judged: 0 };
     const beatMs = 60000 / song.bpm;
@@ -48,22 +92,23 @@
       const el = document.createElement('span');
       el.className = 'rg-chip' + (id === 'A' ? ' a' : '');
       el.textContent = NOTES[id].arrow;
-      el.style.setProperty('--c', NOTES[id].color);
-      rgLane.appendChild(el);
+      rgCols[id].appendChild(el);
       rg.chips.push({ id, el, tHit: t0 + acc * beatMs, judged: false });
       acc += beats;
     });
+    rgField.scrollIntoView({ behavior: api.prefersReduce() ? 'auto' : 'smooth', block: 'center' });
     rg.raf = requestAnimationFrame(rhythmFrame);
   }
 
   function rhythmFrame() {
     if (!rg.on) return;
     const now = performance.now();
-    const W = rgLane.clientWidth || 600;
+    const laneH = rgCols[LANES[0]].clientHeight || 420;
+    const hitY = laneH - HIT_OFF;          // where a chip's center lands at tHit
     rg.chips.forEach((c) => {
       if (c.judged) return;
-      const x = HIT_X + ((c.tHit - now) / APPROACH) * (W - HIT_X - 44);
-      c.el.style.transform = `translateX(${x}px)`;
+      const y = hitY - ((c.tHit - now) / APPROACH) * (hitY + CHIP_H);
+      c.el.style.transform = `translateY(${y}px)`;
       if (now - c.tHit > 220) judge(c, 'M');
     });
     if (rg.judged >= rg.chips.length) { rhythmEnd(); return; }
@@ -96,8 +141,11 @@
     }
     rgScoreEl.textContent = rg.score;
     rgComboEl.textContent = rg.combo > 1 ? `콤보 ×${rg.combo}` : '';
-    rgJudgeEl.textContent = JUDGE_TXT[k];
-    rgJudgeEl.className = 'j-' + k.toLowerCase();
+    // center flash, beatmania style — retrigger the pop animation each judgment
+    rgJudgeEl.textContent = JUDGE_TXT[k] + (k !== 'M' && rg.combo > 1 ? ` ×${rg.combo}` : '');
+    rgJudgeEl.className = 'rg-pop j-' + k.toLowerCase();
+    void rgJudgeEl.offsetWidth;
+    rgJudgeEl.classList.add('pop');
   }
 
   function rhythmEnd() {
@@ -123,11 +171,11 @@
     if (rg.raf) cancelAnimationFrame(rg.raf);
     rg.on = false;
     rg.raf = 0;
-    if (rgLane) {
-      rgLane.querySelectorAll('.rg-chip').forEach((el) => el.remove());
-      rgLane.hidden = true;
+    if (rgField) {
+      rgField.querySelectorAll('.rg-chip').forEach((el) => el.remove());
+      rgField.hidden = true;
+      rgField.classList.remove('open');
     }
-    if (rgHud) rgHud.hidden = true;
     if (!keepResult && rgResult) rgResult.hidden = true;
     if (rgStart) rgStart.hidden = false;
     if (rgStop) rgStop.hidden = true;

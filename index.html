@@ -176,16 +176,23 @@
 
       <div class="panel-card game-card" id="g-rhythm">
         <h3 class="pc-title">🎯 리듬 챌린지 <span>Rhythm Challenge</span></h3>
-        <p class="pc-desc">흘러오는 음표가 판정선에 닿는 순간, 해당 버튼을 누르세요. Perfect ±90ms · Good ±220ms.</p>
+        <p class="pc-desc">위에서 떨어지는 노트가 하단 판정선에 닿는 순간, 그 레인의 키를 누르세요
+          (화면 아래 키 터치 · 방향키 · <b>A</b>). Perfect ±90ms · Good ±220ms.</p>
         <div class="g-controls">
           <select id="rg-song" aria-label="곡 선택"></select>
-          <button id="rg-start" class="big-btn gold">▶ 시작</button>
+          <button id="rg-start" class="big-btn gold">▶ 게임 시작</button>
           <button id="rg-stop" class="big-btn" hidden>■ 중지</button>
           <span class="g-best" id="rg-best"></span>
         </div>
-        <div class="rg-lane" id="rg-lane" hidden><div class="rg-hitline" aria-hidden="true"></div></div>
-        <div class="g-hud" id="rg-hud" hidden>
-          <span>점수 <b id="rg-score">0</b></span><span id="rg-combo"></span><span id="rg-judge"></span>
+        <!-- beatmania-style vertical playfield: 5 lanes, notes fall onto the keys -->
+        <div class="rg-field" id="rg-field" hidden>
+          <div class="rg-fhud">
+            <span>점수 <b id="rg-score">0</b></span><span id="rg-combo"></span>
+          </div>
+          <div class="rg-stage" id="rg-stage">
+            <div class="rg-hitline" aria-hidden="true"></div>
+          </div>
+          <div class="rg-pop" id="rg-judge" aria-hidden="true"></div>
         </div>
         <div class="g-result" id="rg-result" hidden></div>
       </div>
