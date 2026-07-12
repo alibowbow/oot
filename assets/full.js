@@ -180,28 +180,38 @@
     kb.className = 'okb' + (opts.small ? ' okb-small' : '');
     kb.setAttribute('role', 'group');
     kb.setAttribute('aria-label', '오카리나 건반 (라4–파6)');
-    SEQ.filter((id) => !NOTES[id].sharp).forEach((id) => {
-      const w = document.createElement('div');
-      w.className = 'k-slot';
-      const btn = document.createElement('button');
-      btn.type = 'button';
-      btn.className = 'k-white';
-      btn.dataset.note = id;
-      btn.setAttribute('aria-label', `${fullName(id)}, 키 ${NOTES[id].key}`);
-      btn.innerHTML = `<span class="k-sol">${NOTES[id].label}</span>` +
-        `<span class="k-name">${id}</span><span class="k-kbd">${NOTES[id].key}</span>`;
-      w.appendChild(btn);
-      const sharpId = id.replace(/(\d)/, '#$1');
-      if (NOTES[sharpId]) {
-        const b = document.createElement('button');
-        b.type = 'button';
-        b.className = 'k-black';
-        b.dataset.note = sharpId;
-        b.setAttribute('aria-label', `${fullName(sharpId)}, 키 ${NOTES[sharpId].key}`);
-        b.innerHTML = `<span class="k-kbd">${NOTES[sharpId].key}</span>`;
-        w.appendChild(b);
-      }
-      kb.appendChild(w);
+    // Two octave rows matching the computer-key rows (Z-row / Q-row). On
+    // desktop the rows use display:contents, flattening into one piano; on
+    // phones each row is its own line so nothing needs horizontal scrolling.
+    const whites = SEQ.filter((id) => !NOTES[id].sharp);
+    const rows = [whites.slice(0, whites.indexOf('A5')), whites.slice(whites.indexOf('A5'))];
+    rows.forEach((rowIds) => {
+      const row = document.createElement('div');
+      row.className = 'okb-row';
+      rowIds.forEach((id) => {
+        const w = document.createElement('div');
+        w.className = 'k-slot';
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'k-white';
+        btn.dataset.note = id;
+        btn.setAttribute('aria-label', `${fullName(id)}, 키 ${NOTES[id].key}`);
+        btn.innerHTML = `<span class="k-sol">${NOTES[id].label}</span>` +
+          `<span class="k-name">${id}</span><span class="k-kbd">${NOTES[id].key}</span>`;
+        w.appendChild(btn);
+        const sharpId = id.replace(/(\d)/, '#$1');
+        if (NOTES[sharpId]) {
+          const b = document.createElement('button');
+          b.type = 'button';
+          b.className = 'k-black';
+          b.dataset.note = sharpId;
+          b.setAttribute('aria-label', `${fullName(sharpId)}, 키 ${NOTES[sharpId].key}`);
+          b.innerHTML = `<span class="k-kbd">${NOTES[sharpId].key}</span>`;
+          w.appendChild(b);
+        }
+        row.appendChild(w);
+      });
+      kb.appendChild(row);
     });
 
     // press-and-hold with pointer capture; multi-touch plays chords.
