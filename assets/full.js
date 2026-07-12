@@ -319,6 +319,16 @@
     clearPhoto();
     // repertoire playback / practice and games listen for this
     document.dispatchEvent(new CustomEvent('oot:stop'));
+    // the keyboard's songbook is the repertoire — bring it up alongside,
+    // and step back to the Zelda songbook when the mode is switched off
+    const repPanel = $('#panel-repertoire');
+    if (full && repPanel && repPanel.hidden) {
+      const t = $('#tabbtn-repertoire');
+      if (t) t.click();
+    } else if (!full && repPanel && !repPanel.hidden) {
+      const t = $('#tabbtn-songbook');
+      if (t) t.click();
+    }
   }
   if (modeZelda) modeZelda.addEventListener('click', () => setMode(false));
   if (modeFull) modeFull.addEventListener('click', () => setMode(true));

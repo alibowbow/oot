@@ -161,9 +161,14 @@
   ];
 
   /* ----------------------------------------------------------- Rendering */
-  const list = $('#rep-list'), kbBox = $('#rep-kb');
-  if (!list || !kbBox) return;
-  F.mount(kbBox, { small: true });
+  // No keyboard of its own: listening and practice drive the instrument's
+  // main keyboard at the top of the page, switching to full mode as needed.
+  const list = $('#rep-list'), mainKb = $('#full-kb');
+  if (!list) return;
+
+  function ensureFullMode() {
+    if (!document.body.classList.contains('full-on')) F.setMode(true);
+  }
 
   const storedRep = readLS('oot-rep', []);
   let learned = new Set(Array.isArray(storedRep) ? storedRep : []);
@@ -196,10 +201,11 @@
 
   const cardOf = (id) => list.querySelector(`.rep-card[data-song="${id}"]`);
 
-  // the practice guide glows on the repertoire keyboard only
+  // the practice guide glows on the instrument's main keyboard
   function guideKey(id) {
-    $$('[data-note].expect', kbBox).forEach((el) => el.classList.remove('expect'));
-    if (id) $$(`[data-note="${CSS.escape(id)}"]`, kbBox).forEach((el) => el.classList.add('expect'));
+    if (!mainKb) return;
+    $$('[data-note].expect', mainKb).forEach((el) => el.classList.remove('expect'));
+    if (id) $$(`[data-note="${CSS.escape(id)}"]`, mainKb).forEach((el) => el.classList.add('expect'));
   }
 
   function chipRow(song) {
@@ -234,6 +240,7 @@
   function togglePlay(song, card) {
     const btn = $('.rplay-btn', card);
     if (playTimers.length && btn.textContent.includes('중지')) { stopAllRep(); return; }
+    ensureFullMode();                    // key highlights live on the main keyboard
     stopAllRep();
     btn.textContent = '■ 중지';
     const beatMs = 60000 / song.bpm;
@@ -251,6 +258,7 @@
   /* ------------------------------------------------------------- Practice */
   function togglePractice(song, card) {
     if (prac && prac.songId === song.id) { stopAllRep(); return; }
+    ensureFullMode();                    // the guide glows on the main keyboard
     stopAllRep();
     prac = { songId: song.id, at: 0, off: null };
     $('.prac-btn', card).textContent = '■ 그만하기';
@@ -265,7 +273,7 @@
       if (st) st.textContent = `진행 ${prac.at} / ${song.notes.length} — 반짝이는 건반을 연주하세요`;
     };
     cue();
-    kbBox.scrollIntoView({ behavior: OOT.api.prefersReduce() ? 'auto' : 'smooth', block: 'nearest' });
+    if (mainKb) mainKb.scrollIntoView({ behavior: OOT.api.prefersReduce() ? 'auto' : 'smooth', block: 'center' });
     prac.off = F.onNote((nid) => {
       if (!prac || prac.songId !== song.id) return;
       if (nid === song.notes[prac.at][0]) {

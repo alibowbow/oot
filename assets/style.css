@@ -478,22 +478,26 @@ body.raining::before {
 
 /* ============================ app sections (tabs) =========================== */
 .tabbar {
-  display: flex; justify-content: center; gap: 8px; flex-wrap: wrap;
-  margin: 30px 0 6px; padding: 6px;
+  display: flex; gap: 8px; flex-wrap: nowrap;
+  overflow-x: auto; -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;                 /* one clean row; swipe to reach the rest */
+  margin: 30px 0 6px; padding: 6px 2px;
 }
+.tabbar::-webkit-scrollbar { display: none; }
+/* centers the row while it fits, still scrolls edge-to-edge when it doesn't */
+.tabbar::before, .tabbar::after { content: ''; margin: auto; }
 .tabbtn {
+  flex: 0 0 auto; white-space: nowrap;
   background: rgba(20,36,70,.55); color: var(--gold-soft);
   border: 1px solid rgba(246,198,31,.3); border-radius: 22px;
   padding: 9px 18px; font-size: .95rem; cursor: pointer; font-family: var(--ui);
   transition: .15s;
 }
-.tabbtn span { opacity: .6; font-size: .78em; margin-left: 3px; }
 .tabbtn:hover { background: rgba(246,198,31,.12); color: #fff; }
 .tabbtn.on {
   background: rgba(246,198,31,.9); color: #1a1407; font-weight: 700;
   box-shadow: 0 0 16px rgba(246,198,31,.35);
 }
-.tabbtn.on span { opacity: .75; }
 .tabpanel { padding-top: 6px; }
 
 .panel-head h2, .panel-head h3 {
@@ -855,14 +859,14 @@ body.full-on .pad, body.full-on .echo-row { display: none; }
 .k-white .k-name { font-size: .62rem; opacity: .6; }
 .k-white.on { background: linear-gradient(180deg, #ffe9a6, #f6c61f); box-shadow: inset 0 0 14px rgba(180,120,0,.4); }
 .k-black {
-  position: absolute; z-index: 2; top: 0; right: -38%; width: 76%; height: 72px;
+  position: absolute; z-index: 2; top: 0; right: -44%; width: 88%; height: 72px;
   border: 1px solid #05070f; border-radius: 0 0 8px 8px;
   background: linear-gradient(180deg, #2a3350, #10182f); color: #9fb2d8;
   cursor: pointer; touch-action: pan-x; font: inherit; font-size: .66rem;
   display: flex; align-items: flex-end; justify-content: center; padding-bottom: 6px;
 }
 /* invisible touch-target extension — fat fingers welcome */
-.k-black::after { content: ''; position: absolute; inset: -6px -4px -8px; }
+.k-black::after { content: ''; position: absolute; inset: -6px -2px -2px; }
 .k-black.on { background: linear-gradient(180deg, #b98f1d, #8a6a10); color: #fff; box-shadow: 0 0 12px rgba(246,198,31,.6); }
 .k-black { flex-direction: column; gap: 2px; align-items: center; justify-content: flex-end; }
 .k-black .k-sol { font-size: .72rem; font-weight: 700; }
@@ -883,14 +887,18 @@ body.full-on .pad, body.full-on .echo-row { display: none; }
 }
 
 /* live fingering chart next to / under the keyboard */
+#full-kit { width: 100%; }               /* constant width — content never resizes the layout */
 .full-info { display: flex; gap: 18px; align-items: flex-start; justify-content: center; flex-wrap: wrap; margin-top: 12px; }
-.full-chart { min-height: 40px; }
-.full-chart .fing { margin: 0; }
-.fing-note { text-align: center; color: var(--gold-soft); font-size: .85rem; margin: 6px 0 0; }
+.full-chart { flex: 0 0 340px; max-width: 100%; min-height: 40px; text-align: center; }
+.full-chart .fing { margin: 0; text-align: initial; }
+.fing-note {
+  text-align: center; color: var(--gold-soft); font-size: .85rem; margin: 6px 0 0;
+  min-height: 2.8em;                     /* sharps add a caption — keep height stable */
+  max-width: 340px; margin-left: auto; margin-right: auto;
+}
 .full-hint { max-width: 380px; }
 
 /* repertoire ------------------------------------------------------------- */
-.rep-intro .rep-kb { margin-top: 10px; }
 .rep-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 14px; margin-top: 14px; }
 .rep-card {
   background:
@@ -957,7 +965,7 @@ body.full-on .oca-fing { display: block; }
   /* row 1 ends with 솔(G5); its sharp straddles into the row's end padding
      so the 솔 label stays readable */
   .okb .okb-row .k-slot:last-child .k-black { right: -24%; }
-  .okb .k-black::after { inset: -6px -3px -8px; }   /* stay inside the row */
+  .okb .k-black::after { inset: -6px -2px -2px; }   /* stay inside the row */
   .okb .k-white { height: 118px; }
   .okb .k-black { height: 56px; }
   .okb-small .k-white { height: 100px; }
