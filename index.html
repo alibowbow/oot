@@ -54,6 +54,12 @@
         </div>
       </div>
 
+      <!-- play-mode toggle: the five Zelda notes vs. the whole 12-hole range -->
+      <div class="mode-row" role="group" aria-label="연주 모드 선택">
+        <button id="mode-zelda" class="mode-btn on" type="button" aria-pressed="true">🗡 젤다 모드 <span>5음 · 원작 버튼</span></button>
+        <button id="mode-full" class="mode-btn" type="button" aria-pressed="false">🎼 전체 연주 모드 <span>12홀 음역 라4–파6</span></button>
+      </div>
+
       <!-- Button pad: C diamond + A button (N64 layout) -->
       <div class="pad" role="group" aria-label="Ocarina buttons">
         <div class="cpad">
@@ -68,6 +74,17 @@
         </div>
         <button class="note-btn a" data-note="A" aria-label="A, D4">
           <span class="arrow">A</span><span class="key">A</span></button>
+      </div>
+
+      <!-- full-range kit: piano-style keyboard + live 12-hole fingering chart -->
+      <div id="full-kit" hidden>
+        <div id="full-kb" class="full-kb-wrap"></div>
+        <div class="full-info">
+          <div id="full-chart" class="full-chart" aria-live="off"></div>
+          <p class="hint full-hint">건반을 <b>누르는 동안</b> 음이 지속됩니다. 검은 건반은 반음(♯).
+            컴퓨터 키보드: <b>Z X C V B N M</b> = 라4~솔5, <b>Q W E R T Y</b> = 라5~파6
+            (반음은 각 건반에 표시). 연주하는 음의 <b>12홀 운지</b>가 옆에 표시됩니다.</p>
+        </div>
       </div>
 
       <!-- live stream of notes played in free play -->
@@ -99,6 +116,7 @@
     <!-- ============================ Section tabs ============================ -->
     <nav class="tabbar" role="tablist" aria-label="App sections">
       <button class="tabbtn on" role="tab" aria-selected="true" data-tab="songbook" id="tabbtn-songbook" aria-controls="panel-songbook">📜 노래책 <span>Songbook</span></button>
+      <button class="tabbtn" role="tab" aria-selected="false" data-tab="repertoire" id="tabbtn-repertoire" aria-controls="panel-repertoire">🌍 연주곡집 <span>Repertoire</span></button>
       <button class="tabbtn" role="tab" aria-selected="false" data-tab="learn" id="tabbtn-learn" aria-controls="panel-learn">🎓 배우기 <span>Learn</span></button>
       <button class="tabbtn" role="tab" aria-selected="false" data-tab="studio" id="tabbtn-studio" aria-controls="panel-studio">✍️ 작곡 <span>Studio</span></button>
       <button class="tabbtn" role="tab" aria-selected="false" data-tab="games" id="tabbtn-games" aria-controls="panel-games">🎮 게임 <span>Games</span></button>
@@ -108,6 +126,19 @@
     <!-- ============================== Songbook ============================== -->
     <section id="panel-songbook" class="tabpanel" role="tabpanel" aria-labelledby="tabbtn-songbook">
       <div id="songbook" tabindex="-1"></div>
+    </section>
+
+    <!-- ============================ Repertoire ============================== -->
+    <section id="panel-repertoire" class="tabpanel" role="tabpanel" aria-labelledby="tabbtn-repertoire" hidden>
+      <div class="panel-head"><h2>세계의 연주곡집 <span>Public-domain repertoire for the full ocarina</span></h2></div>
+      <div class="panel-card rep-intro">
+        <p class="pc-desc"><b>전체 연주 모드(12홀 음역)</b>로 연주하는, 저작권이 만료되었거나 전래되어
+          자유롭게 연주할 수 있는 곡들입니다. <b>▶ 듣기</b>로 멜로디를 익히고, <b>✎ 연습</b>을 누르면
+          아래 건반에 다음 음이 반짝입니다 — 끝까지 따라가면 곡을 익힌 것으로 기록됩니다.</p>
+        <div id="rep-kb" class="rep-kb"></div>
+        <div id="rep-chart" class="full-chart small"></div>
+      </div>
+      <div id="rep-list" class="rep-list"></div>
     </section>
 
     <!-- ============================= Learn mode ============================= -->
@@ -256,6 +287,8 @@
   <script src="assets/learn.js"></script>
   <script src="assets/studio.js"></script>
   <script src="assets/games.js"></script>
+  <script src="assets/full.js"></script>
+  <script src="assets/repertoire.js"></script>
   <script src="assets/share.js"></script>
 </body>
 </html>

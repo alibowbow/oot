@@ -10,7 +10,7 @@
 
   const LS_STATS = 'oot-stats', LS_ACH = 'oot-ach';
 
-  let stats = { notes: 0, quizBest: 0, simonBest: 0, comps: 0, scare: false, storms: false, suns: false, sGrades: 0, learnDone: 0, learnTotal: 0 };
+  let stats = { notes: 0, quizBest: 0, simonBest: 0, comps: 0, scare: false, storms: false, suns: false, sGrades: 0, learnDone: 0, learnTotal: 0, fullNotes: 0, repDone: 0 };
   try { Object.assign(stats, JSON.parse(localStorage.getItem(LS_STATS) || '{}')); } catch (e) { /* ignore */ }
 
   let unlocked = new Set();
@@ -38,6 +38,8 @@
     { id: 'storm',    icon: '🌧️', ko: '폭풍을 부르는 자', en: 'Storm Caller',      desc: '자유 연주로 폭풍의 노래 인식시키기',       test: (s) => s.storms },
     { id: 'sun',      icon: '🌞', ko: '새벽을 여는 자',   en: 'Dawn Bringer',      desc: '자유 연주로 태양의 노래 인식시키기',       test: (s) => s.suns },
     { id: 'grad',     icon: '🎓', ko: '음악 교실 졸업',   en: 'Music Class Graduate', desc: '배우기 탭의 모든 단원 완료하기',        test: (s) => s.learnTotal > 0 && s.learnDone >= s.learnTotal },
+    { id: 'fullrange', icon: '🎼', ko: '온 음역의 연주자', en: 'Full-Range Player',  desc: '전체 연주 모드로 음을 100번 연주하기',     test: (s) => s.fullNotes >= 100 },
+    { id: 'rep3',     icon: '🌍', ko: '세계의 연주자',    en: 'World Performer',    desc: '연주곡집에서 3곡 연습 완주하기',           test: (s) => s.repDone >= 3 },
   ];
 
   const toastBox = $('#ach-toast');
@@ -77,6 +79,7 @@
       ['⭐', sCount, '리듬 S등급 곡 S-rank songs'],
       ['✍️', stats.comps, '내 노래 Compositions'],
       ['🎓', stats.learnTotal ? `${stats.learnDone} / ${stats.learnTotal}` : '0', '음악 교실 진도 Lessons done'],
+      ['🌍', stats.repDone, '연주곡집 완주 Repertoire done'],
     ];
     grid.innerHTML = tiles.map(([ic, v, l]) =>
       `<div class="stat-tile"><span class="t-icon">${ic}</span><b>${v}</b><span class="t-label">${l}</span></div>`).join('');
@@ -128,6 +131,7 @@
     persist(); check(); renderIfOpen();
   });
 
+  let fullPersistTimer = 0;
   // games / studio report their results here
   OOT.progress = {
     event(name, d = {}) {
@@ -137,6 +141,13 @@
       else if (name === 'comp') stats.comps = Math.max(stats.comps, d.count || 0);
       else if (name === 'scare') stats.scare = true;
       else if (name === 'learn') { stats.learnDone = d.done || 0; stats.learnTotal = d.total || 0; }
+      else if (name === 'fullnote') {
+        stats.fullNotes++;
+        const now = Date.now();               // same write throttle as free play
+        if (now - fullPersistTimer < 800) { check(); renderIfOpen(); return; }
+        fullPersistTimer = now;
+      }
+      else if (name === 'repertoire') stats.repDone = Math.max(stats.repDone, d.count || 0);
       persist(); check(); renderIfOpen();
     },
     get: () => ({ ...stats }),
@@ -144,9 +155,9 @@
 
   const resetBtn = $('#reset-progress');
   if (resetBtn) resetBtn.addEventListener('click', () => {
-    if (!window.confirm('통계·도전과제·배운 노래·게임 기록·학습 진도를 초기화할까요?\n(작곡한 노래와 허수아비의 노래는 유지됩니다)')) return;
+    if (!window.confirm('통계·도전과제·배운 노래·게임 기록·학습 진도·연주곡집 완주 기록을 초기화할까요?\n(작곡한 노래와 허수아비의 노래는 유지됩니다)')) return;
     try {
-      ['oot-stats', 'oot-ach', 'oot-learned', 'oot-quiz', 'oot-simon', 'oot-rhythm', 'oot-learn'].forEach((k) => localStorage.removeItem(k));
+      ['oot-stats', 'oot-ach', 'oot-learned', 'oot-quiz', 'oot-simon', 'oot-rhythm', 'oot-learn', 'oot-rep'].forEach((k) => localStorage.removeItem(k));
     } catch (e) { /* ignore */ }
     location.reload();
   });

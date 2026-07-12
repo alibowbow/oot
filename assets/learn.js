@@ -99,7 +99,18 @@
     clearGuides();
     if (id) $$(`.note-btn[data-note="${id}"]`).forEach((b) => b.classList.add('l-guide'));
   }
-  function clearGuides() { $$('.note-btn.l-guide').forEach((b) => b.classList.remove('l-guide')); }
+  function clearGuides() {
+    $$('.note-btn.l-guide').forEach((b) => b.classList.remove('l-guide'));
+    clearFullGuides();
+  }
+
+  // Guides for the full-range keyboard (전체 연주 모드) — same idea, other bus.
+  // Scoped to the lesson body so repertoire's keyboard never inherits guides.
+  function fullGuide(id) {
+    clearFullGuides();
+    if (id) $$(`.okb [data-note="${CSS.escape(id)}"]`, stepBody).forEach((el) => el.classList.add('expect'));
+  }
+  function clearFullGuides() { $$('.okb .expect').forEach((el) => el.classList.remove('expect')); }
 
   function markStepDone(msg) {
     if (stepDone) return;
@@ -129,8 +140,9 @@
       // 12 holes = 8 finger holes + 2 small sub-holes + 2 thumb holes (back).
       const closed = new Set(fig.closed || []);
       const hole = (id, label, small) =>
-        `<span class="fh-wrap"><span class="fh${small ? ' small' : ''}${closed.has(id) ? ' closed' : ''}"></span>` +
-        `<span class="fh-label">${label}</span></span>`;
+        `<span class="fh-wrap"><span class="fh${small ? ' small' : ''}${closed.has(id) ? ' closed' : ''}" role="img" ` +
+        `aria-label="${label} ${closed.has(id) ? '막음' : '엶'}"></span>` +
+        `<span class="fh-label" aria-hidden="true">${label}</span></span>`;
       return `<figure class="l-fig l-fig-fing"><div class="fing">` +
         `<div class="fing-row"><span class="fing-side">앞면 · 왼손</span>` +
         hole('L1', '검지') + hole('L2', '중지') + hole('L3', '약지') + hole('L4', '새끼') + hole('SL', '보조', true) +
@@ -262,6 +274,7 @@
 
     /* 순서대로 연주 (가이드 표시) */
     seq(step) {
+      if (step.bus === 'full') { RUNNERS.fseq(step); return; }
       const ids = (step.ids || []).filter((i) => NOTES[i]);
       if (!ids.length) { degrade(step); return; }
       let at = 0;
@@ -286,8 +299,73 @@
       cleanup = off;
     },
 
+    /* 전체 음역 건반으로 순서대로 연주 — 계이름 칩 + 인라인 건반 */
+    fseq(step) {
+      const F = window.OOT && OOT.full;
+      const ids = F ? (step.ids || []).filter((i) => F.NOTES[i]) : [];
+      if (!ids.length) { degrade(step); return; }
+      let at = 0;
+      stepBody.innerHTML =
+        `<p class="step-prompt">${step.prompt || ''}</p>` +
+        `<div class="l-seq">${ids.map((i, k) =>
+          `<span class="l-chip fchip${F.NOTES[i].sharp ? ' sharp' : ''} seq-chip" data-k="${k}">${F.NOTES[i].label}</span>`).join('')}</div>` +
+        `<div class="l-kb"></div>`;
+      F.mount($('.l-kb', stepBody), { small: true });
+      const mark = () => $$('.seq-chip', stepBody).forEach((el, k) => {
+        el.classList.toggle('done', k < at);
+        el.classList.toggle('now', k === at);
+      });
+      mark(); fullGuide(ids[0]);
+      const off = F.onNote((nid) => {
+        if (stepDone || stepBody.offsetParent === null) return;   // lesson not on screen
+        if (nid === ids[at]) {
+          at++;
+          if (at >= ids.length) { mark(); clearFullGuides(); markStepDone(); }
+          else { mark(); fullGuide(ids[at]); setFeedback('', true); }
+        } else {
+          setFeedback(`다음 음은 ${F.fullName(ids[at])} — 반짝이는 건반을 보세요!`);
+        }
+      });
+      cleanup = () => { off(); clearFullGuides(); F.stopAll(); };
+    },
+
+    /* 전체 음역 청음 — 듣고 건반으로 따라 연주 */
+    fecho(step) {
+      const F = window.OOT && OOT.full;
+      const ids = F ? (step.ids || []).filter((i) => F.NOTES[i]) : [];
+      if (!ids.length) { degrade(step); return; }
+      let at = 0, phase = 'idle', timers = [], dead = false;
+      stepBody.innerHTML =
+        `<p class="step-prompt">${step.prompt || ''}</p>` +
+        `<div class="g-controls"><button id="echo-play" class="big-btn gold">🔊 들어보기</button>` +
+        `<span class="l-count">${ids.length}음</span></div>` +
+        `<div class="l-kb"></div>`;
+      F.mount($('.l-kb', stepBody), { small: true });
+      const play = () => {
+        if (dead || stepDone) return;
+        timers.forEach(clearTimeout); timers = [];
+        phase = 'show'; at = 0;
+        setFeedback('잘 들어보세요…');
+        ids.forEach((nid, k) => timers.push(setTimeout(() => { if (!dead) F.play(nid, 0.45); }, 250 + k * 520)));
+        timers.push(setTimeout(() => { phase = 'input'; setFeedback('이제 건반으로 따라 연주해 보세요!'); }, 250 + ids.length * 520 + 150));
+      };
+      $('#echo-play', stepBody).addEventListener('click', play);
+      const off = F.onNote((nid) => {
+        if (stepDone || phase !== 'input' || stepBody.offsetParent === null) return;
+        if (nid === ids[at]) {
+          at++;
+          if (at >= ids.length) markStepDone('완벽하게 따라 했어요! 👏');
+        } else {
+          phase = 'idle'; at = 0;
+          setFeedback('괜찮아요! "들어보기"로 다시 듣고 도전해 보세요.');
+        }
+      });
+      cleanup = () => { dead = true; off(); timers.forEach(clearTimeout); F.stopAll(); };
+    },
+
     /* 듣고 따라하기 */
     echo(step) {
+      if (step.bus === 'full') { RUNNERS.fecho(step); return; }
       const ids = (step.ids || []).filter((i) => NOTES[i]);
       if (!ids.length) { degrade(step); return; }
       let at = 0, phase = 'idle', timers = [], dead = false;

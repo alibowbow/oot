@@ -571,6 +571,12 @@
     const id = keyToNote(e);
     if (!id) return;
     const el = e.target;
+    // in full-range mode the instrument's keys belong to the big keyboard —
+    // but while an opt-in panel (games / studio / learn) is open, its games
+    // still need the five-note keys, even when focus rests on <body>
+    if (document.body.classList.contains('full-on') &&
+        !(el && el.closest && el.closest('[data-keys-ok]')) &&
+        !document.querySelector('.tabpanel[data-keys-ok]:not([hidden])')) return;
     if (el && el.closest && el.closest('input, select, textarea, [contenteditable]')) return;
     // playable while "at the instrument" or inside a panel that opts in
     // (studio / games), so recordings and games can be played by keyboard too
