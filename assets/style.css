@@ -1057,7 +1057,10 @@ body.full-on .pad, body.full-on .echo-row { display: none; }
 .full-hint { max-width: 380px; }
 
 /* repertoire ------------------------------------------------------------- */
-.rep-listen { margin: 14px 0 18px; }
+.instrument > .rep-listen {
+  display: none; width: min(760px, 100%); margin: -2px 0 4px; align-self: center;
+}
+body.listen-on .instrument > .rep-listen { display: block; }
 .rep-listen .rg-wheel-focus {
   border-color: rgba(246,198,31,.68);
   background: linear-gradient(90deg, rgba(246,198,31,.14), rgba(69,196,236,.08));
