@@ -1058,7 +1058,7 @@ body.full-on .pad, body.full-on .echo-row { display: none; }
 
 /* repertoire ------------------------------------------------------------- */
 .instrument > .rep-listen {
-  display: none; position: absolute; z-index: 12; top: 18px; right: 18px;
+  display: none; position: absolute; z-index: 12; top: 18px; left: 18px; right: auto;
   width: 168px; margin: 0; padding: 0; border: 0; border-radius: 12px;
   background: none; overflow: visible;
 }
@@ -1254,7 +1254,7 @@ body.full-on .oca-fing { display: block; }
   .full-kb-wrap, .rep-kb, .l-kb { overflow-x: clip; margin-left: -8px; margin-right: -8px; }
 
   .rg-listen { padding: 14px; }
-  .instrument > .rep-listen { top: 10px; right: 8px; width: 142px; padding: 0; }
+  .instrument > .rep-listen { top: 10px; left: 8px; right: auto; width: 142px; padding: 0; }
   .rg-listen-body { grid-template-columns: 1fr; gap: 14px; }
   .rg-wheel-shell { height: 176px; }
   .rg-listen-now strong { font-size: 1.12rem; }
