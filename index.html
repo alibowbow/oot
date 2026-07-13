@@ -86,30 +86,12 @@
         <button id="mode-listen" class="mode-btn listen" type="button" aria-pressed="false">🎧 감상 모드 <span>돌려 고르는 연속 듣기</span></button>
       </div>
 
-      <!-- Listening belongs with the instrument: choose a title while the
-           ocarina remains in view instead of hunting for controls below. -->
+      <!-- Compact, non-layout listening wheel: it floats in the instrument
+           corner so the ocarina and keyboard stay together. -->
       <section id="rep-listen" class="rg-listen rep-listen" aria-label="연주곡집 연속 감상">
-        <div class="rg-listen-head">
-          <span>LISTENING MODE</span>
-          <h4>오카리나 연속 감상</h4>
-          <p>마우스 휠·위아래 키·모바일 스와이프로 제목을 고르세요. 감상을 시작한 뒤에는
-            다른 제목에 멈추기만 해도 해당 곡으로 자연스럽게 넘어갑니다.</p>
-        </div>
-        <div class="rg-listen-body">
-          <div class="rg-wheel-shell">
-            <div id="rep-song-wheel" class="rg-song-wheel" role="listbox" aria-label="감상할 연주곡 선택" tabindex="0"></div>
-            <div class="rg-wheel-focus" aria-hidden="true"><span>선택</span></div>
-          </div>
-          <div class="rg-listen-now">
-            <span class="rg-listen-kicker">선택한 곡</span>
-            <strong id="rep-listen-title">—</strong>
-            <small id="rep-listen-meta"></small>
-            <div class="rg-listen-actions">
-              <button id="rep-listen-play" class="big-btn gold" type="button">▶ 감상 시작</button>
-              <button id="rep-listen-stop" class="big-btn" type="button" hidden>■ 연속 감상 끝내기</button>
-            </div>
-            <p id="rep-listen-status" class="rg-listen-status" role="status" aria-live="polite">곡명을 돌려 선택하세요.</p>
-          </div>
+        <div class="rg-wheel-shell">
+          <div id="rep-song-wheel" class="rg-song-wheel" role="listbox" aria-label="곡을 돌려 바로 감상" tabindex="0"></div>
+          <div class="rg-wheel-focus" aria-hidden="true"></div>
         </div>
       </section>
 
