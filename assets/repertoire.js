@@ -169,20 +169,33 @@
   // No keyboard of its own: listening and practice drive the instrument's
   // main keyboard at the top of the page, switching to full mode as needed.
   const list = $('#rep-list'), mainKb = $('#full-kb');
+  const listenPanel = $('#rep-listen'), listenWheel = $('#rep-song-wheel');
+  const listenTitle = $('#rep-listen-title'), listenMeta = $('#rep-listen-meta');
+  const listenPlay = $('#rep-listen-play'), listenStopBtn = $('#rep-listen-stop');
+  const listenStatus = $('#rep-listen-status');
+  const WHEEL_ITEM_H = 58;
+  const now = () => (window.performance && typeof performance.now === 'function' ? performance.now() : Date.now());
   if (!list) return;
 
-  function ensureFullMode() {
-    if (!document.body.classList.contains('full-on')) F.setMode(true);
+  function ensureFullMode(listening = false) {
+    const fullOn = document.body.classList.contains('full-on');
+    const listenOn = document.body.classList.contains('listen-on');
+    if (!fullOn || listenOn !== listening) F.setMode(true, { listen: listening });
   }
 
   const storedRep = readLS('oot-rep', []);
   let learned = new Set(Array.isArray(storedRep) ? storedRep : []);
   let playTimers = [];
   let prac = null;                       // { songId, at, off }
+  const listen = {
+    index: 0, timers: [], restartTimer: 0, scrollTimer: 0, run: 0,
+    session: false, playing: false, lastWheelAt: -Infinity, suppressScrollUntil: 0,
+  };
 
   function stopPlayback() {
     playTimers.forEach(clearTimeout);
     playTimers = [];
+    if (F.stopPreview) F.stopPreview();
     $$('.rc-note.now', list).forEach((el) => el.classList.remove('now'));
     $$('.rep-card .rplay-btn', list).forEach((b) => { b.textContent = '▶ 듣기'; });
   }
@@ -202,9 +215,123 @@
     prac = null;
   }
 
-  function stopAllRep() { stopPlayback(); stopPractice(); }
-
   const cardOf = (id) => list.querySelector(`.rep-card[data-song="${id}"]`);
+
+  /* ---------------------------------------------------- Title-wheel listen */
+  function updateListenControls() {
+    if (listenPlay) listenPlay.textContent = listen.session ? '↻ 이 곡 다시 듣기' : '▶ 감상 시작';
+    if (listenStopBtn) listenStopBtn.hidden = !listen.session;
+  }
+
+  function clearListenPlayback(keepSession = false) {
+    listen.run++;
+    listen.timers.forEach(clearTimeout);
+    listen.timers = [];
+    clearTimeout(listen.restartTimer);
+    clearTimeout(listen.scrollTimer);
+    listen.restartTimer = 0;
+    listen.scrollTimer = 0;
+    listen.playing = false;
+    if (!keepSession) listen.session = false;
+    if (F.stopPreview) F.stopPreview();
+    updateListenControls();
+  }
+
+  function stopListen(message = '곡명을 돌려 선택하세요.') {
+    clearListenPlayback(false);
+    if (listenStatus) listenStatus.textContent = message;
+  }
+
+  function selectedListenSong() { return RSONGS[listen.index] || null; }
+
+  function setListenSelection(index, options = {}) {
+    if (!RSONGS.length) return;
+    const next = Math.max(0, Math.min(RSONGS.length - 1, index));
+    const changed = next !== listen.index;
+    listen.index = next;
+    const song = selectedListenSong();
+    if (!song) return;
+
+    const items = listenWheel ? $$('.rg-wheel-item', listenWheel) : [];
+    items.forEach((item, i) => {
+      const selected = i === listen.index;
+      item.classList.toggle('on', selected);
+      item.setAttribute('aria-selected', String(selected));
+    });
+    if (listenWheel) listenWheel.setAttribute('aria-activedescendant', `rep-wheel-${song.id}`);
+    if (listenTitle) listenTitle.textContent = song.nameKo;
+    if (listenMeta) listenMeta.textContent = `${song.name} · ♩=${song.bpm} · ${song.key} · ${listen.index + 1}/${RSONGS.length}`;
+
+    if (options.scroll && listenWheel) {
+      listen.suppressScrollUntil = now() + 220;
+      const top = listen.index * WHEEL_ITEM_H;
+      if (typeof listenWheel.scrollTo === 'function') listenWheel.scrollTo({ top, behavior: 'auto' });
+      else listenWheel.scrollTop = top;
+    }
+
+    if (changed && options.user && listen.session) {
+      clearListenPlayback(true);
+      if (listenStatus) listenStatus.textContent = `“${song.nameKo}”로 이동 중…`;
+      listen.restartTimer = setTimeout(playListenCurrent, 280);
+    } else if (!listen.playing && listenStatus) {
+      listenStatus.textContent = listen.session
+        ? '제목을 돌리면 선택한 곡이 바로 재생됩니다.'
+        : '감상 시작을 누르면 이후부터 제목을 돌릴 때 자동 재생됩니다.';
+    }
+  }
+
+  function renderListenWheel() {
+    if (!listenWheel || !RSONGS.length) return;
+    listenWheel.innerHTML = RSONGS.map((song, i) =>
+      `<button id="rep-wheel-${song.id}" class="rg-wheel-item" type="button" role="option" tabindex="-1" ` +
+      `data-index="${i}" aria-selected="false"><span>${song.nameKo}</span><small>${song.name}</small></button>`
+    ).join('');
+    $$('.rg-wheel-item', listenWheel).forEach((item) => {
+      item.addEventListener('click', () => setListenSelection(Number(item.dataset.index), { scroll: true, user: true }));
+    });
+    setListenSelection(0, { scroll: true });
+  }
+
+  function playListenCurrent() {
+    const song = selectedListenSong();
+    if (!song || !F.startPreview) return;
+    ensureFullMode(true);
+    stopPlayback();
+    stopPractice();
+    clearListenPlayback(true);
+    listen.session = true;
+    listen.playing = true;
+    const run = listen.run;
+    updateListenControls();
+    if (OOT.api && OOT.api.synth) OOT.api.synth.ensure();
+    if (listenStatus) listenStatus.textContent = `재생 중 · ${song.nameKo}`;
+
+    const beatMs = 60000 / song.bpm;
+    let t = 140;
+    song.notes.forEach(([id, beats], k) => {
+      const duration = Math.max(180, beats * beatMs * .9);
+      listen.timers.push(setTimeout(() => {
+        if (!listen.session || listen.run !== run) return;
+        F.stopPreview();
+        F.startPreview(id);
+        if (listenStatus) listenStatus.textContent = `재생 중 · ${song.nameKo} · ${k + 1}/${song.notes.length}`;
+      }, t));
+      listen.timers.push(setTimeout(() => {
+        if (listen.run === run) F.endPreview(id);
+      }, t + duration));
+      t += beats * beatMs;
+    });
+    listen.timers.push(setTimeout(() => {
+      if (listen.run !== run) return;
+      F.stopPreview();
+      listen.timers = [];
+      listen.playing = false;
+      updateListenControls();
+      if (listenStatus) listenStatus.textContent = '감상이 끝났습니다. 제목을 돌리면 다음 곡이 바로 재생됩니다.';
+    }, t + 120));
+  }
+
+  function stopAllRep() { stopPlayback(); stopPractice(); stopListen(); }
 
   // the practice guide glows on the instrument's main keyboard
   function guideKey(id) {
@@ -245,16 +372,19 @@
   function togglePlay(song, card) {
     const btn = $('.rplay-btn', card);
     if (playTimers.length && btn.textContent.includes('중지')) { stopAllRep(); return; }
-    ensureFullMode();                    // key highlights live on the main keyboard
+    ensureFullMode(false);               // key highlights live on the main keyboard
     stopAllRep();
     btn.textContent = '■ 중지';
     const beatMs = 60000 / song.bpm;
     let t = 250;
     song.notes.forEach(([id, beats], k) => {
+      const duration = Math.max(180, beats * beatMs * .92);
       playTimers.push(setTimeout(() => {
-        F.play(id, Math.max(0.2, beats * beatMs / 1000 * 0.92));
+        F.stopPreview();
+        F.startPreview(id);
         $$('.rc-note', card).forEach((el, i) => el.classList.toggle('now', i === k));
       }, t));
+      playTimers.push(setTimeout(() => F.endPreview(id), t + duration));
       t += beats * beatMs;
     });
     playTimers.push(setTimeout(() => stopPlayback(), t + 300));
@@ -263,7 +393,7 @@
   /* ------------------------------------------------------------- Practice */
   function togglePractice(song, card) {
     if (prac && prac.songId === song.id) { stopAllRep(); return; }
-    ensureFullMode();                    // the guide glows on the main keyboard
+    ensureFullMode(false);               // the guide glows on the main keyboard
     stopAllRep();
     prac = { songId: song.id, at: 0, off: null };
     $('.prac-btn', card).textContent = '■ 그만하기';
@@ -300,10 +430,64 @@
     });
   }
 
+  renderListenWheel();
+  if (listenPlay) listenPlay.addEventListener('click', playListenCurrent);
+  if (listenStopBtn) listenStopBtn.addEventListener('click', () => stopListen());
+  if (listenWheel) {
+    listenWheel.addEventListener('wheel', (e) => {
+      if (!e.deltaY) return;
+      e.preventDefault();
+      const stamp = now();
+      if (stamp - listen.lastWheelAt < 95) return;
+      listen.lastWheelAt = stamp;
+      setListenSelection(listen.index + (e.deltaY > 0 ? 1 : -1), { scroll: true, user: true });
+    }, { passive: false });
+    listenWheel.addEventListener('scroll', () => {
+      if (now() < listen.suppressScrollUntil) return;
+      clearTimeout(listen.scrollTimer);
+      listen.scrollTimer = setTimeout(() => {
+        setListenSelection(Math.round(listenWheel.scrollTop / WHEEL_ITEM_H), { user: true });
+      }, 90);
+    });
+    listenWheel.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+        e.preventDefault();
+        setListenSelection(listen.index + (e.key === 'ArrowDown' ? 1 : -1), { scroll: true, user: true });
+      } else if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        playListenCurrent();
+      }
+    });
+  }
+
+  document.addEventListener('oot:listen-mode', (e) => {
+    if (!e.detail || !e.detail.active) {
+      if (listen.session || listen.playing) stopListen();
+      return;
+    }
+    requestAnimationFrame(() => {
+      setListenSelection(listen.index, { scroll: true });
+      if (listenPanel) {
+        listenPanel.scrollIntoView({
+          behavior: OOT.api.prefersReduce() ? 'auto' : 'smooth',
+          block: 'center',
+        });
+      }
+      if (listenWheel) {
+        try { listenWheel.focus({ preventScroll: true }); }
+        catch (err) { listenWheel.focus(); }
+      }
+    });
+  });
+
   render();
   document.addEventListener('oot:tab', stopAllRep);
   document.addEventListener('oot:stop', stopAllRep);
 
   // tiny probe for tests
-  OOT._rep = () => ({ songs: RSONGS.length, learned: [...learned], practicing: prac ? prac.songId : null });
+  OOT._rep = () => ({
+    songs: RSONGS.length, learned: [...learned], practicing: prac ? prac.songId : null,
+    listenMode: document.body.classList.contains('listen-on'), listening: listen.session,
+    listenPlaying: listen.playing, listenSong: selectedListenSong() ? selectedListenSong().id : null,
+  });
 })();
