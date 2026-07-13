@@ -256,6 +256,8 @@
     items.forEach((item, i) => {
       const selected = i === listen.index;
       item.classList.toggle('on', selected);
+      item.classList.toggle('wheel-before', i < listen.index);
+      item.classList.toggle('wheel-after', i > listen.index);
       item.setAttribute('aria-selected', String(selected));
     });
     if (listenWheel) listenWheel.setAttribute('aria-activedescendant', `rep-wheel-${song.id}`);
