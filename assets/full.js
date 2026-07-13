@@ -327,14 +327,17 @@
   window.addEventListener('blur', () => { heldK.clear(); stopAllFull(); });
 
   /* ------------------------------------------------------- Mode toggle */
-  const modeZelda = $('#mode-zelda'), modeFull = $('#mode-full');
+  const modeZelda = $('#mode-zelda'), modeFull = $('#mode-full'), modeListen = $('#mode-listen');
   const fullKit = $('#full-kit');
   const instrument = document.querySelector('.instrument');
 
-  function setMode(full) {
+  function setMode(full, options = {}) {
+    const listening = !!full && options.listen === true;
     document.body.classList.toggle('full-on', full);
+    document.body.classList.toggle('listen-on', listening);
     if (modeZelda) { modeZelda.classList.toggle('on', !full); modeZelda.setAttribute('aria-pressed', String(!full)); }
-    if (modeFull) { modeFull.classList.toggle('on', full); modeFull.setAttribute('aria-pressed', String(full)); }
+    if (modeFull) { modeFull.classList.toggle('on', full && !listening); modeFull.setAttribute('aria-pressed', String(full && !listening)); }
+    if (modeListen) { modeListen.classList.toggle('on', listening); modeListen.setAttribute('aria-pressed', String(listening)); }
     if (fullKit) fullKit.hidden = !full;
     api.stopAll();
     stopAllFull();
@@ -351,9 +354,11 @@
       const t = $('#tabbtn-songbook');
       if (t) t.click();
     }
+    document.dispatchEvent(new CustomEvent('oot:listen-mode', { detail: { active: listening } }));
   }
   if (modeZelda) modeZelda.addEventListener('click', () => setMode(false));
   if (modeFull) modeFull.addEventListener('click', () => setMode(true));
+  if (modeListen) modeListen.addEventListener('click', () => setMode(true, { listen: true }));
 
   // the main keyboard lives inside the instrument panel
   if (fullKit) {
