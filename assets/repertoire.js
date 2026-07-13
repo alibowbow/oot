@@ -160,6 +160,11 @@
     },
   ];
 
+  // Shared with the full-range Rhythm Challenge. Keeping one canonical song
+  // list means repertoire playback, practice, and the game always agree on
+  // notes, tempo, titles, and difficulty metadata.
+  OOT.REPERTOIRE = RSONGS;
+
   /* ----------------------------------------------------------- Rendering */
   // No keyboard of its own: listening and practice drive the instrument's
   // main keyboard at the top of the page, switching to full mode as needed.

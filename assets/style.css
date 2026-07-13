@@ -559,6 +559,23 @@ select, #rec-name {
 .g-msg { color: var(--gold-soft); font-size: .9rem; min-height: 1.4em; margin: 10px 0 2px; }
 
 /* beatmania-style vertical playfield ---------------------------------------- */
+.rg-mode {
+  display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 7px;
+  max-width: 430px; margin: 13px 0 4px; padding: 4px;
+  background: rgba(7,14,31,.55); border: 1px solid rgba(132,160,214,.18); border-radius: 13px;
+}
+.rg-mode-btn {
+  min-width: 0; padding: 9px 13px; border: 1px solid transparent; border-radius: 9px;
+  background: transparent; color: rgba(222,233,255,.65); cursor: pointer; font: inherit; font-size: .86rem;
+  transition: background .15s ease, border-color .15s ease, color .15s ease, box-shadow .15s ease;
+}
+.rg-mode-btn small { display: block; margin-top: 2px; font-size: .67rem; opacity: .62; }
+.rg-mode-btn.on {
+  color: #ffe9a7; background: linear-gradient(180deg, rgba(246,198,31,.18), rgba(246,198,31,.08));
+  border-color: rgba(246,198,31,.62); box-shadow: 0 0 13px rgba(246,198,31,.12);
+}
+.rg-mode-btn:hover:not(.on) { color: #edf4ff; background: rgba(112,150,220,.08); }
+
 .rg-field {
   position: relative; margin-top: 12px; height: clamp(420px, 66vh, 640px);
   border: 1px solid rgba(246,198,31,.3); border-radius: 14px; overflow: hidden;
@@ -579,6 +596,9 @@ select, #rec-name {
 #rg-next { color: rgba(222,233,255,.55); font-size: .8rem; }
 
 .rg-stage { position: absolute; inset: 0; display: flex; }
+.rg-field.is-full { height: clamp(540px, 78vh, 720px); }
+.rg-field.is-full .rg-stage { bottom: 116px; }
+.rg-field.is-full .rg-hitline { bottom: 14px; }
 .rg-col { flex: 1; display: flex; flex-direction: column; border-right: 1px solid rgba(120,140,190,.14); min-width: 0; }
 .rg-col:last-child { border-right: 0; }
 .rg-col.alt .rg-notes { background: rgba(255,255,255,.03); }
@@ -592,6 +612,17 @@ select, #rec-name {
 }
 .rg-col.a .rg-notes::after { background: linear-gradient(180deg, transparent 30%, rgba(110,140,255,.28)); }
 .rg-col.on .rg-notes::after { opacity: 1; }
+.rg-col-full .rg-notes {
+  background:
+    linear-gradient(90deg, transparent 49.8%, rgba(246,198,31,.18) 50%, transparent 50.2%),
+    radial-gradient(ellipse at 50% 100%, rgba(74,135,224,.24), transparent 62%);
+}
+.rg-col-full .rg-notes::before {
+  content: '계이름과 음정을 보고 아래 건반을 연주하세요'; position: absolute; top: 54px; left: 50%;
+  transform: translateX(-50%); width: max-content; max-width: 86%; color: rgba(222,233,255,.36);
+  font-size: .72rem; letter-spacing: .04em; text-align: center;
+}
+.rg-col-full.on .rg-notes::after { opacity: 1; background: linear-gradient(180deg, transparent 30%, rgba(108,190,255,.25)); }
 
 .rg-key {
   height: 56px; border: 0; border-top: 2px solid rgba(246,198,31,.5); border-radius: 0;
@@ -621,6 +652,19 @@ select, #rec-name {
   background: linear-gradient(180deg, #9fb4ff, #5a78ff); color: #fff;
   box-shadow: 0 0 10px rgba(110,140,255,.5), inset 0 -2px 0 rgba(0,0,0,.25);
 }
+.rg-chip.full {
+  left: 22%; width: 56%; height: 34px; top: -17px; border-radius: 10px;
+  grid-template-columns: 1fr auto; gap: 9px; padding: 0 13px;
+  background: linear-gradient(180deg, hsl(var(--pitch-h) 88% 74%), hsl(var(--pitch-h) 72% 48%));
+  color: #08162d; border-color: rgba(216,239,255,.55);
+  box-shadow: 0 0 15px hsl(var(--pitch-h) 78% 58% / .48), inset 0 -2px 0 rgba(0,0,0,.2);
+}
+.rg-chip.full b { justify-self: end; font-size: .87rem; }
+.rg-chip.full small { justify-self: start; font-size: .63rem; font-weight: 700; opacity: .7; }
+.rg-chip.full.sharp {
+  color: #edf6ff; background: linear-gradient(180deg, hsl(var(--pitch-h) 45% 37%), hsl(var(--pitch-h) 52% 20%));
+  border-color: rgba(168,202,242,.55);
+}
 .rg-chip.p { background: #7be08a; box-shadow: 0 0 14px #7be08a; transition: opacity .3s; opacity: 0; }
 .rg-chip.g { background: #e0d47b; box-shadow: 0 0 10px #e0d47b; transition: opacity .3s; opacity: 0; }
 .rg-chip.m { filter: grayscale(1) brightness(.55); transition: opacity .4s; opacity: 0; }
@@ -645,6 +689,14 @@ select, #rec-name {
 #rg-judge.j-p { color: #7be08a; }
 #rg-judge.j-g { color: #e0d47b; }
 #rg-judge.j-m { color: #e08a7b; }
+.rg-full-kb {
+  position: absolute; z-index: 5; left: 0; right: 0; bottom: 0; height: 116px; padding: 8px 10px;
+  background: linear-gradient(180deg, rgba(13,25,52,.97), rgba(6,12,27,.99));
+  border-top: 1px solid rgba(246,198,31,.36); box-shadow: 0 -12px 30px rgba(0,0,0,.45);
+}
+.rg-full-kb .okb { min-width: 0; max-width: none; height: 100%; }
+.rg-full-kb .okb-small .k-white { height: 98px; }
+.rg-full-kb .okb-small .k-black { height: 50px; }
 .g-result {
   display: flex; gap: 16px; align-items: center; flex-wrap: wrap; margin-top: 12px;
   padding: 12px 16px; border-radius: 12px; background: rgba(246,198,31,.08);
@@ -951,6 +1003,55 @@ body.full-on .oca-fing { display: block; }
   box-shadow: 0 0 8px rgba(140,215,255,.35);
 }
 
+/* compact back view: the photo shows only the front, so the two thumb holes
+   get a live schematic in the transparent lower-right of the image. */
+.oca-back {
+  position: absolute; right: 1%; bottom: 4%; width: 19%; min-width: 62px;
+  text-align: center; filter: drop-shadow(0 7px 12px rgba(0,0,0,.42));
+}
+.oca-back-label {
+  display: block; margin-bottom: 3px; color: rgba(216,238,255,.82); font-size: clamp(.52rem, 1.4vw, .68rem);
+  font-weight: 700; letter-spacing: .08em; text-shadow: 0 1px 3px #061229;
+}
+.oca-back-label small { font-size: .72em; opacity: .55; }
+.oca-back-body {
+  position: relative; width: 100%; aspect-ratio: 1.12 / 1;
+  border-radius: 48% 48% 40% 40% / 36% 36% 60% 60%;
+  background:
+    radial-gradient(circle at 30% 22%, rgba(218,248,255,.72), transparent 17%),
+    linear-gradient(145deg, #68d7f6 0%, #168ac8 46%, #085aa0 100%);
+  border: 1px solid rgba(202,243,255,.72);
+  box-shadow: inset -8px -10px 14px rgba(2,47,99,.34), inset 5px 4px 8px rgba(224,251,255,.2);
+}
+.oca-back-grip {
+  position: absolute; left: 43%; bottom: -16%; width: 23%; height: 32%; border-radius: 0 0 38% 38%;
+  background: linear-gradient(100deg, #147ebd, #69d8f3 55%, #075494); border: 1px solid rgba(195,240,255,.45);
+}
+.oca-back .fhole.thumb {
+  width: 21%; opacity: 1; top: 42%; background: #06152a; border: 2px solid rgba(197,235,250,.62);
+  box-shadow: inset 0 2px 4px rgba(0,0,0,.86); mix-blend-mode: normal;
+}
+.oca-back .left-thumb { left: 31%; }
+.oca-back .right-thumb { left: 69%; }
+.oca-back .fhole.thumb.press {
+  opacity: 1; border-color: #ffe07b; background: radial-gradient(circle, #fff3be 0%, #f6c61f 52%, #9a6f04 100%);
+  box-shadow: 0 0 11px rgba(246,198,31,.88), inset 0 1px 2px rgba(255,255,255,.65);
+}
+.oca-back .fhole.thumb.open {
+  opacity: 1; background: #06152a; border-color: rgba(142,220,255,.96);
+  box-shadow: 0 0 10px rgba(108,203,255,.74), inset 0 2px 4px rgba(0,0,0,.86);
+}
+.oca-back .fhole.thumb.half {
+  opacity: 1; border-color: #ffe07b;
+  background: linear-gradient(to bottom, #f6c61f 50%, #06152a 50%);
+  box-shadow: 0 0 10px rgba(246,198,31,.62);
+}
+.oca-back-hand {
+  position: absolute; top: 68%; color: rgba(225,246,255,.68); font-size: clamp(.42rem, 1.2vw, .58rem); font-weight: 800;
+}
+.oca-back-hand.left-hand { left: 26%; }
+.oca-back-hand.right-hand { right: 24%; }
+
 /* learn-mode full-keyboard exercises */
 .l-kb { margin-top: 14px; overflow-x: auto; }
 .l-chip.fchip { --c: var(--gold); background: #eef3fb; color: #2a3a66; font-size: .95rem; flex-direction: column; }
@@ -971,4 +1072,19 @@ body.full-on .oca-fing { display: block; }
   .okb-small .k-white { height: 100px; }
   .okb-small .k-black { height: 50px; }
   .full-kb-wrap, .rep-kb, .l-kb { overflow-x: clip; margin-left: -8px; margin-right: -8px; }
+
+  .rg-field.is-full { height: clamp(520px, 76vh, 660px); }
+  .rg-field.is-full .rg-stage { bottom: 150px; }
+  .rg-full-kb { height: 150px; padding: 6px 8px; }
+  .rg-full-kb .okb { gap: 7px; }
+  .rg-full-kb .okb-row { padding-right: 8px; }
+  .rg-full-kb .okb-small .k-white { height: 64px; padding-bottom: 4px; }
+  .rg-full-kb .okb-small .k-black { height: 34px; padding-bottom: 2px; }
+  .rg-full-kb .k-name { display: none; }
+  .rg-full-kb .k-kbd { font-size: .48rem; padding: 0 2px; }
+  .rg-chip.full { left: 15%; width: 70%; }
 }
+
+/* The five-button dock is useful elsewhere in Games, but the full-range
+   challenge supplies its own 21-key dock inside the playfield. */
+body.rg-full-game .mini-pad { transform: translateX(-50%) translateY(150%); pointer-events: none; }
