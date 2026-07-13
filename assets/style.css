@@ -1081,8 +1081,9 @@ body.listen-on .mode-row > .rep-listen { display: block; }
   box-shadow: inset 0 0 8px rgba(31,55,46,.18);
 }
 .mode-row > .rep-listen .rg-song-wheel {
-  /* 60px inner viewport: 10px preview + 40px selection + 10px preview. */
-  inset: 0; padding: 10px 2px; color: #203b32; scrollbar-width: none;
+  /* Every track keeps a fixed 20px scroll step. The selected row expands
+     visually without changing the list geometry. */
+  inset: 0; padding: 20px 2px; color: #203b32; scrollbar-width: none;
   -webkit-mask-image: none; mask-image: none;
 }
 .mode-row > .rep-listen .rg-wheel-item {
@@ -1090,7 +1091,8 @@ body.listen-on .mode-row > .rep-listen { display: block; }
   align-items: center; gap: 2px; padding: 0 5px; border: 1px solid transparent; border-radius: 2px;
   color: #29463c; white-space: nowrap; overflow: hidden;
   font-family: ui-monospace, "SFMono-Regular", Consolas, "Liberation Mono", monospace;
-  transition: color .12s ease, opacity .12s ease, background .12s ease;
+  transition: height .16s ease, margin .16s ease, clip-path .16s ease,
+    color .12s ease, opacity .12s ease, background .12s ease;
 }
 .mode-row > .rep-listen .rg-wheel-item::before {
   content: attr(data-track); position: static; z-index: auto; width: auto; height: auto;
@@ -1107,9 +1109,11 @@ body.listen-on .mode-row > .rep-listen { display: block; }
   font-size: .57rem; font-weight: 700; text-align: left; letter-spacing: -.035em;
 }
 .mode-row > .rep-listen .rg-wheel-item.wheel-before,
-.mode-row > .rep-listen .rg-wheel-item.wheel-after { opacity: .48; transform: none; }
+.mode-row > .rep-listen .rg-wheel-item.wheel-after { z-index: 2; opacity: .48; transform: none; }
+.mode-row > .rep-listen .rg-wheel-item.wheel-before { clip-path: inset(10px 0 0); }
+.mode-row > .rep-listen .rg-wheel-item.wheel-after { clip-path: inset(0 0 10px); }
 .mode-row > .rep-listen .rg-wheel-item.on {
-  height: 40px; color: #dff0dc; opacity: 1; transform: none;
+  z-index: 1; height: 40px; margin: -10px 0; color: #dff0dc; opacity: 1; transform: none;
   border-color: rgba(33,61,51,.88); background: linear-gradient(180deg, #34574b, #29483e);
   box-shadow: inset 2px 0 0 #b9d395, inset 0 1px 0 rgba(231,244,228,.12);
 }
