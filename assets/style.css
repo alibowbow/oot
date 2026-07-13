@@ -1058,9 +1058,29 @@ body.full-on .pad, body.full-on .echo-row { display: none; }
 
 /* repertoire ------------------------------------------------------------- */
 .instrument > .rep-listen {
-  display: none; width: min(760px, 100%); margin: -2px 0 4px; align-self: center;
+  display: none; position: absolute; z-index: 12; top: 18px; right: 18px;
+  width: 168px; margin: 0; padding: 0; border: 0; border-radius: 12px;
+  background: none; overflow: visible;
 }
 body.listen-on .instrument > .rep-listen { display: block; }
+.instrument > .rep-listen .rg-wheel-shell {
+  height: 114px; border-color: rgba(105,218,251,.48); border-radius: 12px;
+  background: rgba(4,14,32,.84);
+  box-shadow: 0 8px 24px rgba(0,0,0,.42), inset 0 10px 18px rgba(0,0,0,.28), inset 0 -10px 18px rgba(0,0,0,.28);
+  backdrop-filter: blur(7px);
+}
+.instrument > .rep-listen .rg-song-wheel { padding: 38px 5px; }
+.instrument > .rep-listen .rg-wheel-item {
+  height: 38px; padding: 0 9px; justify-content: center; white-space: nowrap;
+}
+.instrument > .rep-listen .rg-wheel-item span {
+  width: 100%; overflow: hidden; text-overflow: ellipsis; font-size: .72rem; text-align: center;
+}
+.instrument > .rep-listen .rg-wheel-item.on { color: #fff6c8; transform: none; }
+.instrument > .rep-listen .rg-wheel-focus {
+  left: 5px; right: 5px; top: 38px; height: 38px; border-color: rgba(246,198,31,.72);
+  background: rgba(246,198,31,.09); box-shadow: 0 0 12px rgba(246,198,31,.14), inset 2px 0 0 var(--gold);
+}
 .rep-listen .rg-wheel-focus {
   border-color: rgba(246,198,31,.68);
   background: linear-gradient(90deg, rgba(246,198,31,.14), rgba(69,196,236,.08));
@@ -1191,6 +1211,7 @@ body.full-on .oca-fing { display: block; }
   .full-kb-wrap, .rep-kb, .l-kb { overflow-x: clip; margin-left: -8px; margin-right: -8px; }
 
   .rg-listen { padding: 14px; }
+  .instrument > .rep-listen { top: 10px; right: 8px; width: 142px; padding: 0; }
   .rg-listen-body { grid-template-columns: 1fr; gap: 14px; }
   .rg-wheel-shell { height: 176px; }
   .rg-listen-now strong { font-size: 1.12rem; }
