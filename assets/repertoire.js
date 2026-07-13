@@ -244,6 +244,25 @@
 
   function selectedListenSong() { return RSONGS[listen.index] || null; }
 
+  function listenIndexAtCenter() {
+    if (!listenWheel) return listen.index;
+    /* jsdom has no layout metrics, so keep the deterministic step fallback
+       used by the smoke tests. Browsers use the actual enlarged centre row. */
+    if (!listenWheel.clientHeight) return Math.round(listenWheel.scrollTop / WHEEL_ITEM_H);
+    const viewportCenter = listenWheel.scrollTop + (listenWheel.clientHeight / 2);
+    let closest = listen.index;
+    let distance = Infinity;
+    $$('.rg-wheel-item', listenWheel).forEach((item) => {
+      const itemCenter = item.offsetTop + (item.offsetHeight / 2);
+      const nextDistance = Math.abs(itemCenter - viewportCenter);
+      if (nextDistance < distance) {
+        closest = Number(item.dataset.index);
+        distance = nextDistance;
+      }
+    });
+    return closest;
+  }
+
   function setListenSelection(index, options = {}) {
     if (!RSONGS.length) return;
     const next = Math.max(0, Math.min(RSONGS.length - 1, index));
@@ -454,7 +473,7 @@
       if (now() < listen.suppressScrollUntil) return;
       clearTimeout(listen.scrollTimer);
       listen.scrollTimer = setTimeout(() => {
-        setListenSelection(Math.round(listenWheel.scrollTop / WHEEL_ITEM_H), { user: true });
+        setListenSelection(listenIndexAtCenter(), { scroll: true, user: true });
       }, 90);
     });
     listenWheel.addEventListener('keydown', (e) => {
