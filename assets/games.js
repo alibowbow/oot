@@ -25,16 +25,27 @@
   const REPERTOIRE = Array.isArray(OOT.REPERTOIRE) ? OOT.REPERTOIRE : [];
   const rgSel = $('#rg-song'), rgStart = $('#rg-start'), rgStop = $('#rg-stop');
   const rgModeZelda = $('#rg-mode-zelda'), rgModeFull = $('#rg-mode-full');
+  const rgPurposeWrap = $('#rg-full-purpose');
+  const rgPurposeChallenge = $('#rg-purpose-challenge'), rgPurposeListen = $('#rg-purpose-listen');
+  const rgChallengeControls = $('#rg-challenge-controls');
   const rgCountWrap = $('#rg-medley-count');
   const rgCountBtns = rgCountWrap ? [...rgCountWrap.querySelectorAll('[data-count]')] : [];
   const rgField = $('#rg-field'), rgStage = $('#rg-stage'), rgResult = $('#rg-result');
   const rgFullKb = $('#rg-full-kb');
   const rgScoreEl = $('#rg-score'), rgComboEl = $('#rg-combo'), rgJudgeEl = $('#rg-judge'), rgBestEl = $('#rg-best');
   const rgNowEl = $('#rg-now'), rgNextEl = $('#rg-next');
+  const rgListenPanel = $('#rg-listen'), rgWheel = $('#rg-song-wheel');
+  const rgListenTitle = $('#rg-listen-title'), rgListenMeta = $('#rg-listen-meta');
+  const rgListenPlay = $('#rg-listen-play'), rgListenStop = $('#rg-listen-stop');
+  const rgListenStatus = $('#rg-listen-status');
 
   let rgMode = 'zelda';
+  let rgExperience = 'challenge';
   let rgMedleyCount = 5;
   let rg = { on: false, mode: rgMode, chips: [], held: new Set(), raf: 0 };
+  const WHEEL_ITEM_H = 58;
+  const listen = { index: 0, timers: [], restartTimer: 0, scrollTimer: 0, run: 0,
+                   session: false, playing: false, lastWheelAt: -Infinity, suppressScrollUntil: 0 };
   let rhythmBest = readLS('oot-rhythm', {});
   const rgCols = {};                     // note id / "full" → .rg-notes box
 
@@ -89,7 +100,16 @@
     });
   }
 
-  if (rgFullKb && FULL) FULL.mount(rgFullKb, { small: true });
+  if (rgFullKb && FULL) {
+    FULL.mount(rgFullKb, { small: true });
+    rgFullKb.querySelectorAll('.okb-row').forEach((row, i) => {
+      const top = i === 0;
+      row.dataset.rhythmRow = top ? 'top' : 'bottom';
+      row.dataset.rowLabel = top ? '윗줄' : '아랫줄';
+      row.setAttribute('role', 'group');
+      row.setAttribute('aria-label', `${top ? '윗줄' : '아랫줄'} 건반`);
+    });
+  }
 
   function modeSongs(mode = rgMode) { return mode === 'full' ? REPERTOIRE : SONGS; }
 
@@ -114,6 +134,154 @@
     showRgBest();
   }
 
+  function updateListenControls() {
+    if (rgListenPlay) rgListenPlay.textContent = listen.session ? '↻ 이 곡 다시 듣기' : '▶ 감상 시작';
+    if (rgListenStop) rgListenStop.hidden = !listen.session;
+  }
+
+  function clearListenPlayback(keepSession) {
+    listen.run++;
+    listen.timers.forEach(clearTimeout);
+    listen.timers = [];
+    clearTimeout(listen.restartTimer);
+    clearTimeout(listen.scrollTimer);
+    listen.restartTimer = 0;
+    listen.scrollTimer = 0;
+    listen.playing = false;
+    if (!keepSession) listen.session = false;
+    if (FULL && FULL.stopPreview) FULL.stopPreview();
+    updateListenControls();
+  }
+
+  function listenStop() {
+    clearListenPlayback(false);
+    if (rgListenStatus) rgListenStatus.textContent = '곡명을 돌려 선택하세요.';
+  }
+
+  function selectedListenSong() { return REPERTOIRE[listen.index] || null; }
+
+  function setListenSelection(index, opts = {}) {
+    if (!REPERTOIRE.length) return;
+    const next = Math.max(0, Math.min(REPERTOIRE.length - 1, index));
+    const changed = next !== listen.index;
+    listen.index = next;
+    const song = selectedListenSong();
+    if (!song) return;
+
+    const items = rgWheel ? [...rgWheel.querySelectorAll('.rg-wheel-item')] : [];
+    items.forEach((item, i) => {
+      const on = i === listen.index;
+      item.classList.toggle('on', on);
+      item.setAttribute('aria-selected', String(on));
+    });
+    if (rgWheel) rgWheel.setAttribute('aria-activedescendant', `rg-wheel-${song.id}`);
+    if (rgListenTitle) rgListenTitle.textContent = song.nameKo;
+    if (rgListenMeta) rgListenMeta.textContent = `${song.name} · ♩=${song.bpm} · ${song.key} · ${listen.index + 1}/${REPERTOIRE.length}`;
+    if (rgMode === 'full' && rgSel) {
+      rgSel.value = song.id;
+      updateMedleyControls();
+      showRgBest();
+    }
+
+    if (opts.scroll && rgWheel) {
+      const top = listen.index * WHEEL_ITEM_H;
+      listen.suppressScrollUntil = performance.now() + 220;
+      if (typeof rgWheel.scrollTo === 'function') {
+        rgWheel.scrollTo({ top, behavior: 'auto' });
+      } else rgWheel.scrollTop = top;
+    }
+
+    if (changed && opts.user && listen.session) {
+      clearListenPlayback(true);
+      if (rgListenStatus) rgListenStatus.textContent = `“${song.nameKo}”로 이동 중…`;
+      listen.restartTimer = setTimeout(listenPlayCurrent, 280);
+    } else if (!listen.playing && rgListenStatus) {
+      rgListenStatus.textContent = listen.session
+        ? '휠을 돌리면 선택한 곡이 바로 재생됩니다.'
+        : '감상 시작을 누르면 이후부터 곡을 돌릴 때 자동 재생됩니다.';
+    }
+  }
+
+  function renderListenWheel() {
+    if (!rgWheel || !REPERTOIRE.length) return;
+    rgWheel.innerHTML = REPERTOIRE.map((song, i) =>
+      `<button id="rg-wheel-${song.id}" class="rg-wheel-item" type="button" role="option" tabindex="-1" ` +
+      `data-index="${i}" aria-selected="false"><span>${song.nameKo}</span><small>${song.name}</small></button>`
+    ).join('');
+    rgWheel.querySelectorAll('.rg-wheel-item').forEach((item) => {
+      item.addEventListener('click', () => setListenSelection(Number(item.dataset.index), { scroll: true, user: true }));
+    });
+    setListenSelection(0, { scroll: true });
+  }
+
+  function listenPlayCurrent() {
+    if (rgMode !== 'full' || rgExperience !== 'listen') return;
+    const song = selectedListenSong();
+    if (!song || !FULL || !FULL.startPreview) return;
+    rhythmStop(false);
+    quizStop();
+    simonStop();
+    clearListenPlayback(true);
+    listen.session = true;
+    listen.playing = true;
+    const run = listen.run;
+    updateListenControls();
+    api.synth.ensure();
+    if (rgListenStatus) rgListenStatus.textContent = `재생 중 · ${song.nameKo}`;
+
+    const beatMs = 60000 / song.bpm;
+    let t = 140;
+    song.notes.forEach(([id, beats], k) => {
+      const duration = Math.max(180, beats * beatMs * .9);
+      listen.timers.push(setTimeout(() => {
+        if (!listen.session || listen.run !== run) return;
+        FULL.stopPreview();
+        FULL.startPreview(id);
+        if (rgListenStatus) rgListenStatus.textContent = `재생 중 · ${song.nameKo} · ${k + 1}/${song.notes.length}`;
+      }, t));
+      listen.timers.push(setTimeout(() => {
+        if (listen.run === run) FULL.endPreview(id);
+      }, t + duration));
+      t += beats * beatMs;
+    });
+    listen.timers.push(setTimeout(() => {
+      if (listen.run !== run) return;
+      FULL.stopPreview();
+      listen.timers = [];
+      listen.playing = false;
+      updateListenControls();
+      if (rgListenStatus) rgListenStatus.textContent = '감상이 끝났습니다. 휠을 돌리면 다음 곡이 바로 재생됩니다.';
+    }, t + 120));
+  }
+
+  function applyRhythmExperience() {
+    const full = rgMode === 'full';
+    const listening = full && rgExperience === 'listen';
+    if (rgPurposeWrap) rgPurposeWrap.hidden = !full;
+    if (rgChallengeControls) rgChallengeControls.hidden = listening;
+    if (rgListenPanel) rgListenPanel.hidden = !listening;
+    if (rgPurposeChallenge) {
+      rgPurposeChallenge.classList.toggle('on', !listening);
+      rgPurposeChallenge.setAttribute('aria-pressed', String(!listening));
+    }
+    if (rgPurposeListen) {
+      rgPurposeListen.classList.toggle('on', listening);
+      rgPurposeListen.setAttribute('aria-pressed', String(listening));
+    }
+    if (listening) {
+      if (rgResult) rgResult.hidden = true;
+      requestAnimationFrame(() => setListenSelection(listen.index, { scroll: true }));
+    }
+  }
+
+  function setRhythmExperience(experience) {
+    if (experience === 'listen' && rgMode !== 'full') return;
+    if (rg.on) rhythmStop(false);
+    listenStop();
+    rgExperience = experience;
+    applyRhythmExperience();
+  }
+
   function populateRhythmSongs() {
     if (!rgSel) return;
     const full = rgMode === 'full';
@@ -128,10 +296,12 @@
   function setRhythmMode(mode) {
     if (mode === 'full' && (!FULL || !REPERTOIRE.length)) return;
     if (rg.on) rhythmStop(false);
+    listenStop();
     api.stopAll();
     if (FULL) FULL.stopAll();
     rgMode = mode;
     rg.mode = mode;
+    rgExperience = 'challenge';
     if (rgModeZelda) {
       const on = mode === 'zelda';
       rgModeZelda.classList.toggle('on', on);
@@ -144,12 +314,51 @@
     }
     buildRhythmLanes(mode);
     populateRhythmSongs();
+    applyRhythmExperience();
   }
 
-  if (rgSel) rgSel.addEventListener('change', () => { updateMedleyControls(); showRgBest(); });
+  renderListenWheel();
+  if (rgSel) rgSel.addEventListener('change', () => {
+    updateMedleyControls();
+    showRgBest();
+    if (rgMode === 'full' && rgSel.value !== 'medley') {
+      const i = REPERTOIRE.findIndex((song) => song.id === rgSel.value);
+      if (i >= 0) setListenSelection(i, { scroll: true });
+    }
+  });
   rgCountBtns.forEach((btn) => btn.addEventListener('click', () => setMedleyCount(Number(btn.dataset.count))));
   if (rgModeZelda) rgModeZelda.addEventListener('click', () => setRhythmMode('zelda'));
   if (rgModeFull) rgModeFull.addEventListener('click', () => setRhythmMode('full'));
+  if (rgPurposeChallenge) rgPurposeChallenge.addEventListener('click', () => setRhythmExperience('challenge'));
+  if (rgPurposeListen) rgPurposeListen.addEventListener('click', () => setRhythmExperience('listen'));
+  if (rgListenPlay) rgListenPlay.addEventListener('click', listenPlayCurrent);
+  if (rgListenStop) rgListenStop.addEventListener('click', listenStop);
+  if (rgWheel) {
+    rgWheel.addEventListener('wheel', (e) => {
+      if (!e.deltaY) return;
+      e.preventDefault();
+      const now = performance.now();
+      if (now - listen.lastWheelAt < 95) return;
+      listen.lastWheelAt = now;
+      setListenSelection(listen.index + (e.deltaY > 0 ? 1 : -1), { scroll: true, user: true });
+    }, { passive: false });
+    rgWheel.addEventListener('scroll', () => {
+      if (performance.now() < listen.suppressScrollUntil) return;
+      clearTimeout(listen.scrollTimer);
+      listen.scrollTimer = setTimeout(() => {
+        setListenSelection(Math.round(rgWheel.scrollTop / WHEEL_ITEM_H), { user: true });
+      }, 90);
+    });
+    rgWheel.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+        e.preventDefault();
+        setListenSelection(listen.index + (e.key === 'ArrowDown' ? 1 : -1), { scroll: true, user: true });
+      } else if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        listenPlayCurrent();
+      }
+    });
+  }
   setRhythmMode('zelda');
 
   function showRgBest() {
@@ -184,9 +393,14 @@
     const row = key.closest('.okb-row');
     const rows = row && row.parentElement ? [...row.parentElement.querySelectorAll('.okb-row')] : [];
     const high = rows.indexOf(row) > 0;
+    const rowLabel = high ? '아랫줄' : '윗줄';
     chip.el.classList.toggle('row-low', !high);
     chip.el.classList.toggle('row-high', high);
     chip.el.dataset.keyboardRow = high ? 'high' : 'low';
+    chip.el.dataset.rowLabel = rowLabel;
+    const rowTag = chip.el.querySelector('.rg-row-tag');
+    if (rowTag) rowTag.textContent = rowLabel;
+    chip.el.setAttribute('aria-label', `${chip.noteLabel}, ${rowLabel} 건반`);
 
     let center;
     let width;
@@ -232,8 +446,7 @@
         el.classList.add('rg-chip', 'full');
         if (n.sharp) el.classList.add('sharp');
         el.style.setProperty('--pitch-h', String(196 + pitchIndex * 4.8));
-        el.innerHTML = `<b>${n.label}</b><small>${id}</small>`;
-        el.setAttribute('aria-label', `${n.label} ${id}${holdMs ? `, ${beats}박 장음` : ''}`);
+        el.innerHTML = `<span class="rg-row-tag" aria-hidden="true"></span><b>${n.label}</b><small>${id}</small>`;
         rgCols.full.appendChild(el);
       } else {
         el.classList.add('rg-chip');
@@ -242,7 +455,10 @@
         el.setAttribute('aria-label', `${NOTES[id].pitch}${holdMs ? `, ${beats}박 장음` : ''}`);
         rgCols[id].appendChild(el);
       }
-      const chip = { id, el, beats, beatMs, holdMs, tHit, tRelease: tHit + holdMs,
+      const noteLabel = rg.mode === 'full'
+        ? `${FULL.NOTES[id].label} ${id}${holdMs ? `, ${beats}박 장음` : ''}`
+        : `${NOTES[id].pitch}${holdMs ? `, ${beats}박 장음` : ''}`;
+      const chip = { id, el, beats, beatMs, holdMs, noteLabel, tHit, tRelease: tHit + holdMs,
                      started: false, startGrade: null, judged: false };
       rg.chips.push(chip);
       if (rg.mode === 'full') positionFullChip(chip);
@@ -253,7 +469,8 @@
 
   function setRunControls(disabled) {
     if (rgSel) rgSel.disabled = disabled;
-    [rgModeZelda, rgModeFull, ...rgCountBtns].forEach((el) => { if (el) el.disabled = disabled; });
+    [rgModeZelda, rgModeFull, rgPurposeChallenge, rgPurposeListen, ...rgCountBtns]
+      .forEach((el) => { if (el) el.disabled = disabled; });
   }
 
   function rhythmStart() {
@@ -470,10 +687,12 @@
 
   // tiny read-only probe for tests/debugging
   OOT._rg = () => ({
-    on: rg.on, mode: rg.mode, medley: !!rg.medley, target: rg.songTarget || 0,
+    on: rg.on, mode: rg.mode, experience: rgExperience, medley: !!rg.medley, target: rg.songTarget || 0,
     songs: rg.songsStarted || 0, queued: rg.songsQueued || 0, judged: rg.judged || 0,
     chips: rg.chips.length, longNotes: rg.chips.filter((c) => c.holdMs > 0).length,
     alignedFullNotes: rg.chips.filter((c) => c.el.dataset.keyboardRow).length,
+    listening: listen.session, listenPlaying: listen.playing,
+    listenSong: selectedListenSong() ? selectedListenSong().id : null,
   });
 
   /* ========================================================== Melody quiz */
@@ -641,7 +860,7 @@
     });
   }
 
-  function stopGames() { rhythmStop(false); quizStop(); simonStop(); }
+  function stopGames() { rhythmStop(false); listenStop(); quizStop(); simonStop(); }
   document.addEventListener('oot:tab', stopGames);
   document.addEventListener('oot:stop', stopGames);
 })();
