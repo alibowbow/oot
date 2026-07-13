@@ -105,7 +105,6 @@
     rgFullKb.querySelectorAll('.okb-row').forEach((row, i) => {
       const top = i === 0;
       row.dataset.rhythmRow = top ? 'top' : 'bottom';
-      row.dataset.rowLabel = top ? '윗줄' : '아랫줄';
       row.setAttribute('role', 'group');
       row.setAttribute('aria-label', `${top ? '윗줄' : '아랫줄'} 건반`);
     });
@@ -397,9 +396,6 @@
     chip.el.classList.toggle('row-low', !high);
     chip.el.classList.toggle('row-high', high);
     chip.el.dataset.keyboardRow = high ? 'high' : 'low';
-    chip.el.dataset.rowLabel = rowLabel;
-    const rowTag = chip.el.querySelector('.rg-row-tag');
-    if (rowTag) rowTag.textContent = rowLabel;
     chip.el.setAttribute('aria-label', `${chip.noteLabel}, ${rowLabel} 건반`);
 
     let center;
@@ -446,7 +442,7 @@
         el.classList.add('rg-chip', 'full');
         if (n.sharp) el.classList.add('sharp');
         el.style.setProperty('--pitch-h', String(196 + pitchIndex * 4.8));
-        el.innerHTML = `<span class="rg-row-tag" aria-hidden="true"></span><b>${n.label}</b><small>${id}</small>`;
+        el.innerHTML = `<b>${n.label}</b><small>${id}</small>`;
         rgCols.full.appendChild(el);
       } else {
         el.classList.add('rg-chip');
