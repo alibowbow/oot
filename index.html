@@ -84,16 +84,16 @@
         <button id="mode-zelda" class="mode-btn on" type="button" aria-pressed="true">🗡 젤다 모드 <span>5음 · 원작 버튼</span></button>
         <button id="mode-full" class="mode-btn" type="button" aria-pressed="false">🎼 전체 연주 모드 <span>12홀 음역 라4–파6</span></button>
         <button id="mode-listen" class="mode-btn listen" type="button" aria-pressed="false">🎧 감상 모드 <span>돌려 고르는 연속 듣기</span></button>
-      </div>
 
-      <!-- Compact, non-layout listening wheel: it floats in the instrument
-           corner so the ocarina and keyboard stay together. -->
-      <section id="rep-listen" class="rg-listen rep-listen" aria-label="연주곡집 연속 감상">
-        <div class="rg-wheel-shell">
-          <div id="rep-song-wheel" class="rg-song-wheel" role="listbox" aria-label="곡을 돌려 바로 감상" tabindex="0"></div>
-          <div class="rg-wheel-focus" aria-hidden="true"></div>
-        </div>
-      </section>
+        <!-- In listening mode this compact screen replaces the listening
+             button, so no part of the ocarina is covered. -->
+        <section id="rep-listen" class="rg-listen rep-listen" aria-label="연주곡집 연속 감상">
+          <div class="rg-wheel-shell">
+            <div id="rep-song-wheel" class="rg-song-wheel" role="listbox" aria-label="곡을 돌려 바로 감상" tabindex="0"></div>
+            <div class="rg-wheel-focus" aria-hidden="true"></div>
+          </div>
+        </section>
+      </div>
 
       <!-- Button pad: C diamond + A button (N64 layout) -->
       <div class="pad" role="group" aria-label="Ocarina buttons">
