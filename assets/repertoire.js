@@ -173,7 +173,7 @@
   const listenTitle = $('#rep-listen-title'), listenMeta = $('#rep-listen-meta');
   const listenPlay = $('#rep-listen-play'), listenStopBtn = $('#rep-listen-stop');
   const listenStatus = $('#rep-listen-status');
-  const WHEEL_ITEM_H = 38;
+  const WHEEL_ITEM_H = 20;
   const now = () => (window.performance && typeof performance.now === 'function' ? performance.now() : Date.now());
   if (!list) return;
 
