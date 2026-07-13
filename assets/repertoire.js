@@ -173,7 +173,7 @@
   const listenTitle = $('#rep-listen-title'), listenMeta = $('#rep-listen-meta');
   const listenPlay = $('#rep-listen-play'), listenStopBtn = $('#rep-listen-stop');
   const listenStatus = $('#rep-listen-status');
-  const WHEEL_ITEM_H = 58;
+  const WHEEL_ITEM_H = 38;
   const now = () => (window.performance && typeof performance.now === 'function' ? performance.now() : Date.now());
   if (!list) return;
 
@@ -269,8 +269,9 @@
       else listenWheel.scrollTop = top;
     }
 
-    if (changed && options.user && listen.session) {
+    if (changed && options.user) {
       clearListenPlayback(true);
+      listen.session = true;
       if (listenStatus) listenStatus.textContent = `“${song.nameKo}”로 이동 중…`;
       listen.restartTimer = setTimeout(playListenCurrent, 280);
     } else if (!listen.playing && listenStatus) {
@@ -284,10 +285,14 @@
     if (!listenWheel || !RSONGS.length) return;
     listenWheel.innerHTML = RSONGS.map((song, i) =>
       `<button id="rep-wheel-${song.id}" class="rg-wheel-item" type="button" role="option" tabindex="-1" ` +
-      `data-index="${i}" aria-selected="false"><span>${song.nameKo}</span><small>${song.name}</small></button>`
+      `data-index="${i}" aria-selected="false" title="${song.nameKo} · ${song.name}"><span>${song.nameKo}</span></button>`
     ).join('');
     $$('.rg-wheel-item', listenWheel).forEach((item) => {
-      item.addEventListener('click', () => setListenSelection(Number(item.dataset.index), { scroll: true, user: true }));
+      item.addEventListener('click', () => {
+        const index = Number(item.dataset.index);
+        if (index === listen.index) playListenCurrent();
+        else setListenSelection(index, { scroll: true, user: true });
+      });
     });
     setListenSelection(0, { scroll: true });
   }
@@ -467,12 +472,6 @@
     }
     requestAnimationFrame(() => {
       setListenSelection(listen.index, { scroll: true });
-      if (listenPanel) {
-        listenPanel.scrollIntoView({
-          behavior: OOT.api.prefersReduce() ? 'auto' : 'smooth',
-          block: 'center',
-        });
-      }
       if (listenWheel) {
         try { listenWheel.focus({ preventScroll: true }); }
         catch (err) { listenWheel.focus(); }
