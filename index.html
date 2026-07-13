@@ -79,10 +79,11 @@
         </div>
       </div>
 
-      <!-- play-mode toggle: the five Zelda notes vs. the whole 12-hole range -->
+      <!-- play-mode toggle: Zelda notes, free full-range play, or repertoire listening -->
       <div class="mode-row" role="group" aria-label="연주 모드 선택">
         <button id="mode-zelda" class="mode-btn on" type="button" aria-pressed="true">🗡 젤다 모드 <span>5음 · 원작 버튼</span></button>
         <button id="mode-full" class="mode-btn" type="button" aria-pressed="false">🎼 전체 연주 모드 <span>12홀 음역 라4–파6</span></button>
+        <button id="mode-listen" class="mode-btn listen" type="button" aria-pressed="false">🎧 감상 모드 <span>돌려 고르는 연속 듣기</span></button>
       </div>
 
       <!-- Button pad: C diamond + A button (N64 layout) -->
@@ -158,10 +159,35 @@
       <div class="panel-head"><h2>세계의 연주곡집 <span>Public-domain repertoire for the full ocarina</span></h2></div>
       <div class="panel-card rep-intro">
         <p class="pc-desc"><b>전체 연주 모드(12홀 음역)</b>로 연주하는, 저작권이 만료되었거나 전래되어
-          자유롭게 연주할 수 있는 곡들입니다. <b>▶ 듣기</b>로 멜로디를 익히고, <b>✎ 연습</b>을 누르면
+          자유롭게 연주할 수 있는 곡들입니다. 위의 <b>🎧 감상 모드</b>나 아래 선곡 목록에서 제목을 돌려
+          연속 감상할 수 있습니다. 곡별 <b>▶ 듣기</b>로 멜로디를 익히고, <b>✎ 연습</b>을 누르면
           <b>위쪽 악기 건반</b>에 다음 음이 반짝입니다 — 끝까지 따라가면 곡을 익힌 것으로 기록됩니다.
           듣기·연습을 시작하면 전체 연주 모드가 자동으로 켜집니다.</p>
       </div>
+      <section id="rep-listen" class="rg-listen rep-listen" aria-label="연주곡집 연속 감상">
+        <div class="rg-listen-head">
+          <span>LISTENING MODE</span>
+          <h4>곡명만 돌려가며 연속 감상</h4>
+          <p>마우스 휠·위아래 키·모바일 스와이프로 제목을 고르세요. 감상을 시작한 뒤에는
+            다른 제목에 멈추기만 해도 해당 곡으로 자연스럽게 넘어갑니다.</p>
+        </div>
+        <div class="rg-listen-body">
+          <div class="rg-wheel-shell">
+            <div id="rep-song-wheel" class="rg-song-wheel" role="listbox" aria-label="감상할 연주곡 선택" tabindex="0"></div>
+            <div class="rg-wheel-focus" aria-hidden="true"><span>선택</span></div>
+          </div>
+          <div class="rg-listen-now">
+            <span class="rg-listen-kicker">선택한 곡</span>
+            <strong id="rep-listen-title">—</strong>
+            <small id="rep-listen-meta"></small>
+            <div class="rg-listen-actions">
+              <button id="rep-listen-play" class="big-btn gold" type="button">▶ 감상 시작</button>
+              <button id="rep-listen-stop" class="big-btn" type="button" hidden>■ 연속 감상 끝내기</button>
+            </div>
+            <p id="rep-listen-status" class="rg-listen-status" role="status" aria-live="polite">곡명을 돌려 선택하세요.</p>
+          </div>
+        </div>
+      </section>
       <div id="rep-list" class="rep-list"></div>
     </section>
 
@@ -234,7 +260,7 @@
         <p class="pc-desc"><b>젤다 5음</b>은 레인 키·방향키·A로, <b>전체 연주</b>는 12홀 음역 건반으로
           떨어지는 노트를 판정선에 맞춰 연주하세요. Perfect ±90ms · Good ±220ms.
           길게 이어진 노트는 끝까지 누르고, 랜덤 메들리는 5곡 또는 10곡을 선택해 완주할 수 있습니다.
-          전체 연주에서는 곡명 휠을 돌려 연속 감상할 수도 있습니다.</p>
+          전체 연주에서는 제목을 돌려가며 연속 감상할 수도 있습니다.</p>
         <div class="rg-mode" role="group" aria-label="리듬 챌린지 연주 모드">
           <button id="rg-mode-zelda" class="rg-mode-btn on" type="button" aria-pressed="true">
             <span aria-hidden="true">🗡</span> 젤다 5음 <small>원작 버튼</small>
@@ -248,7 +274,7 @@
             🎯 리듬 도전 <small>노트를 맞춰 연주</small>
           </button>
           <button id="rg-purpose-listen" type="button" aria-pressed="false">
-            🎧 곡명 휠 감상 <small>돌려가며 연속 듣기</small>
+            🎧 연속 감상 <small>제목을 돌려 이어 듣기</small>
           </button>
         </div>
         <div class="g-controls" id="rg-challenge-controls">
@@ -262,9 +288,9 @@
           <button id="rg-stop" class="big-btn" hidden>■ 중지</button>
           <span class="g-best" id="rg-best"></span>
         </div>
-        <section id="rg-listen" class="rg-listen" aria-label="전체 연주 곡명 휠 감상" hidden>
+        <section id="rg-listen" class="rg-listen" aria-label="전체 연주 연속 감상" hidden>
           <div class="rg-listen-head">
-            <span>LISTENING WHEEL</span>
+            <span>LISTENING MODE</span>
             <h4>곡명만 가볍게 돌려 감상</h4>
             <p>마우스 휠·위아래 키·모바일 스와이프로 곡을 고르세요. 감상을 시작한 뒤에는
               다른 곡에 멈추기만 해도 그 곡으로 자연스럽게 넘어갑니다.</p>
