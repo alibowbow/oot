@@ -174,6 +174,9 @@
   const listenPlay = $('#rep-listen-play'), listenStopBtn = $('#rep-listen-stop');
   const listenStatus = $('#rep-listen-status');
   const WHEEL_ITEM_H = 20;
+  const LISTEN_SETTLE_MS = 420;
+  const WHEEL_GESTURE_DELTA = 28;
+  const WHEEL_GESTURE_IDLE_MS = 140;
   const now = () => (window.performance && typeof performance.now === 'function' ? performance.now() : Date.now());
   if (!list) return;
 
@@ -189,7 +192,8 @@
   let prac = null;                       // { songId, at, off }
   const listen = {
     index: 0, timers: [], restartTimer: 0, scrollTimer: 0, run: 0,
-    session: false, playing: false, lastWheelAt: -Infinity, suppressScrollUntil: 0,
+    wheelResetTimer: 0, wheelDelta: 0, wheelGestureMoved: false,
+    session: false, playing: false, suppressScrollUntil: 0,
   };
 
   function stopPlayback() {
@@ -239,6 +243,10 @@
 
   function stopListen(message = '곡명을 돌려 선택하세요.') {
     clearListenPlayback(false);
+    clearTimeout(listen.wheelResetTimer);
+    listen.wheelResetTimer = 0;
+    listen.wheelDelta = 0;
+    listen.wheelGestureMoved = false;
     if (listenStatus) listenStatus.textContent = message;
   }
 
@@ -293,8 +301,8 @@
     if (changed && options.user) {
       clearListenPlayback(true);
       listen.session = true;
-      if (listenStatus) listenStatus.textContent = `“${song.nameKo}”로 이동 중…`;
-      listen.restartTimer = setTimeout(playListenCurrent, 280);
+      if (listenStatus) listenStatus.textContent = `“${song.nameKo}” 선택 중…`;
+      listen.restartTimer = setTimeout(playListenCurrent, LISTEN_SETTLE_MS);
     } else if (!listen.playing && listenStatus) {
       listenStatus.textContent = listen.session
         ? '제목을 돌리면 선택한 곡이 바로 재생됩니다.'
@@ -464,10 +472,24 @@
     listenWheel.addEventListener('wheel', (e) => {
       if (!e.deltaY) return;
       e.preventDefault();
-      const stamp = now();
-      if (stamp - listen.lastWheelAt < 95) return;
-      listen.lastWheelAt = stamp;
-      setListenSelection(listen.index + (e.deltaY > 0 ? 1 : -1), { scroll: true, user: true });
+      clearTimeout(listen.wheelResetTimer);
+      listen.wheelResetTimer = setTimeout(() => {
+        listen.wheelResetTimer = 0;
+        listen.wheelDelta = 0;
+        listen.wheelGestureMoved = false;
+      }, WHEEL_GESTURE_IDLE_MS);
+
+      /* A trackpad emits a stream of tiny inertial events. Accumulate them,
+         then allow only one track change until that gesture has settled. */
+      if (listen.wheelGestureMoved) return;
+      const delta = e.deltaMode === 1 ? e.deltaY * 40
+        : e.deltaMode === 2 ? e.deltaY * 60 : e.deltaY;
+      if (listen.wheelDelta && Math.sign(delta) !== Math.sign(listen.wheelDelta)) listen.wheelDelta = 0;
+      listen.wheelDelta += delta;
+      if (Math.abs(listen.wheelDelta) < WHEEL_GESTURE_DELTA) return;
+      listen.wheelGestureMoved = true;
+      listen.wheelDelta = 0;
+      setListenSelection(listen.index + (delta > 0 ? 1 : -1), { scroll: true, user: true });
     }, { passive: false });
     listenWheel.addEventListener('scroll', () => {
       if (now() < listen.suppressScrollUntil) return;
