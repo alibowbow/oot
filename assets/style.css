@@ -1064,22 +1064,60 @@ body.full-on .pad, body.full-on .echo-row { display: none; }
 }
 body.listen-on .instrument > .rep-listen { display: block; }
 .instrument > .rep-listen .rg-wheel-shell {
-  height: 114px; border-color: rgba(105,218,251,.48); border-radius: 12px;
-  background: rgba(4,14,32,.84);
-  box-shadow: 0 8px 24px rgba(0,0,0,.42), inset 0 10px 18px rgba(0,0,0,.28), inset 0 -10px 18px rgba(0,0,0,.28);
+  height: 114px; border-color: rgba(224,185,91,.58); border-radius: 12px;
+  background:
+    linear-gradient(90deg, rgba(122,73,29,.2), transparent 9%, transparent 91%, rgba(122,73,29,.2)),
+    linear-gradient(180deg, #17141a, #080b12 48%, #151117);
+  box-shadow: 0 9px 25px rgba(0,0,0,.48), inset 0 11px 18px rgba(0,0,0,.42), inset 0 -11px 18px rgba(0,0,0,.42);
   backdrop-filter: blur(7px);
+  perspective: 260px;
 }
 .instrument > .rep-listen .rg-song-wheel { padding: 38px 5px; }
 .instrument > .rep-listen .rg-wheel-item {
-  height: 38px; padding: 0 9px; justify-content: center; white-space: nowrap;
+  position: relative; height: 38px; padding: 0 39px 0 11px; justify-content: center;
+  border-radius: 7px; white-space: nowrap; transform-origin: 50% 50%; overflow: visible;
+  transition: color .2s ease, opacity .2s ease, transform .24s cubic-bezier(.2,.7,.2,1);
+}
+.instrument > .rep-listen .rg-wheel-item::before {
+  content: ''; position: absolute; z-index: 1; left: 3px; right: 25px; top: 3px; bottom: 3px;
+  border: 1px solid rgba(222,205,167,.12); border-radius: 5px;
+  background: linear-gradient(135deg, rgba(55,63,79,.72), rgba(18,23,34,.92));
+  box-shadow: 0 2px 6px rgba(0,0,0,.3);
+  transition: border-color .2s ease, background .2s ease, box-shadow .2s ease;
+}
+.instrument > .rep-listen .rg-wheel-item::after {
+  content: ''; position: absolute; z-index: 0; right: 5px; top: 6px; width: 27px; height: 27px; border-radius: 50%;
+  background:
+    radial-gradient(circle, #e4c368 0 8%, #6f541b 9% 14%, transparent 15%),
+    repeating-radial-gradient(circle, #08090d 0 2px, #242832 2.5px 3.4px);
+  box-shadow: 0 2px 5px rgba(0,0,0,.65), inset 0 0 0 1px rgba(255,255,255,.08);
+  opacity: .34; transform: translateX(-7px) scale(.76) rotate(-18deg);
+  transition: opacity .2s ease, transform .28s cubic-bezier(.2,.8,.2,1), box-shadow .2s ease;
 }
 .instrument > .rep-listen .rg-wheel-item span {
-  width: 100%; overflow: hidden; text-overflow: ellipsis; font-size: .72rem; text-align: center;
+  position: relative; z-index: 2; width: 100%; overflow: hidden; text-overflow: ellipsis;
+  font-size: .7rem; text-align: left; letter-spacing: -.015em;
 }
-.instrument > .rep-listen .rg-wheel-item.on { color: #fff6c8; transform: none; }
+.instrument > .rep-listen .rg-wheel-item.wheel-before {
+  opacity: .42; transform: rotateX(-22deg) scale(.94) translateY(1px);
+}
+.instrument > .rep-listen .rg-wheel-item.wheel-after {
+  opacity: .42; transform: rotateX(22deg) scale(.94) translateY(-1px);
+}
+.instrument > .rep-listen .rg-wheel-item.on { color: #fff4c6; opacity: 1; transform: translateX(-2px) scale(1.025); }
+.instrument > .rep-listen .rg-wheel-item.on::before {
+  border-color: rgba(236,207,137,.52);
+  background: linear-gradient(135deg, rgba(73,57,46,.96), rgba(28,30,39,.98));
+  box-shadow: 0 3px 8px rgba(0,0,0,.48), inset 2px 0 0 rgba(239,198,89,.72);
+}
+.instrument > .rep-listen .rg-wheel-item.on::after {
+  opacity: 1; transform: translateX(0) scale(1) rotate(12deg);
+  box-shadow: 0 3px 8px rgba(0,0,0,.72), 0 0 8px rgba(225,190,91,.15), inset 0 0 0 1px rgba(255,255,255,.1);
+}
 .instrument > .rep-listen .rg-wheel-focus {
-  left: 5px; right: 5px; top: 38px; height: 38px; border-color: rgba(246,198,31,.72);
-  background: rgba(246,198,31,.09); box-shadow: 0 0 12px rgba(246,198,31,.14), inset 2px 0 0 var(--gold);
+  left: 5px; right: 5px; top: 38px; height: 38px; border-color: rgba(232,194,102,.6);
+  background: linear-gradient(90deg, rgba(210,163,60,.08), transparent 68%);
+  box-shadow: 0 0 13px rgba(215,171,69,.13);
 }
 .rep-listen .rg-wheel-focus {
   border-color: rgba(246,198,31,.68);
@@ -1088,6 +1126,10 @@ body.listen-on .instrument > .rep-listen { display: block; }
 }
 .rep-listen .rg-wheel-focus span { color: var(--gold-soft); }
 .rg-song-wheel:focus-visible { outline: 2px solid #76dcf6; outline-offset: -3px; }
+@media (prefers-reduced-motion: reduce) {
+  .instrument > .rep-listen .rg-wheel-item,
+  .instrument > .rep-listen .rg-wheel-item::after { transition: none; }
+}
 .rep-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 14px; margin-top: 14px; }
 .rep-card {
   background:
