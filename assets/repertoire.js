@@ -287,7 +287,8 @@
     if (!listenWheel || !RSONGS.length) return;
     listenWheel.innerHTML = RSONGS.map((song, i) =>
       `<button id="rep-wheel-${song.id}" class="rg-wheel-item" type="button" role="option" tabindex="-1" ` +
-      `data-index="${i}" aria-selected="false" title="${song.nameKo} · ${song.name}"><span>${song.nameKo}</span></button>`
+      `data-index="${i}" data-track="${String(i + 1).padStart(2, '0')}" aria-selected="false" ` +
+      `title="${song.nameKo} · ${song.name}"><span>${song.nameKo}</span></button>`
     ).join('');
     $$('.rg-wheel-item', listenWheel).forEach((item) => {
       item.addEventListener('click', () => {
