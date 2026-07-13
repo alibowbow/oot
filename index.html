@@ -210,7 +210,40 @@
     <section id="panel-studio" class="tabpanel" role="tabpanel" aria-labelledby="tabbtn-studio" data-keys-ok hidden>
       <div class="panel-head"><h2>작곡 스튜디오 <span>Compose your own melodies</span></h2></div>
 
-      <div class="panel-card">
+      <div class="panel-card studio-create-card">
+        <h3 class="pc-title">🎼 곡 만들기 <span>직접 연주하거나 랜덤으로 시작</span></h3>
+        <p class="pc-desc">직접 연주한 리듬을 녹음하거나, 모티프가 있는 곡을 랜덤 생성하세요.
+          미리듣기 후 저장하면 모든 곡을 주소 해시로 공유할 수 있습니다.</p>
+
+        <div class="studio-divider"><span>🎲 랜덤 생성</span></div>
+        <div class="random-controls" role="group" aria-label="랜덤 곡 생성 설정">
+          <label class="studio-field"><span>길이</span>
+            <select id="random-length" aria-label="랜덤 곡 음표 수">
+              <option value="8">8음 · 짧게</option>
+              <option value="16" selected>16음 · 보통</option>
+              <option value="24">24음 · 길게</option>
+              <option value="32">32음 · 최대</option>
+            </select>
+          </label>
+          <label class="studio-field"><span>분위기</span>
+            <select id="random-style" aria-label="랜덤 곡 분위기">
+              <option value="calm">차분하게</option>
+              <option value="balanced" selected>균형 있게</option>
+              <option value="lively">경쾌하게</option>
+            </select>
+          </label>
+          <label class="studio-field"><span>빠르기</span>
+            <select id="random-bpm" aria-label="랜덤 곡 빠르기">
+              <option value="80">♩=80</option>
+              <option value="108" selected>♩=108</option>
+              <option value="132">♩=132</option>
+              <option value="156">♩=156</option>
+            </select>
+          </label>
+          <button id="random-generate" class="big-btn random-btn" type="button">🎲 곡 생성</button>
+        </div>
+
+        <div class="studio-divider"><span>● 직접 연주 녹음</span></div>
         <div class="rec-controls">
           <button id="rec-btn" class="big-btn rec">● 녹음</button>
           <button id="rec-stop" class="big-btn" disabled>■ 정지</button>
@@ -220,6 +253,31 @@
         </div>
         <p class="rec-status" id="rec-status">● 녹음을 누르고 오카리나를 연주하세요 — 연주한 리듬 그대로 악보가 됩니다 (최대 32음).</p>
         <div id="rec-take" class="rec-take" aria-live="off"></div>
+      </div>
+
+      <div class="panel-card studio-import-card">
+        <h3 class="pc-title">📥 외부곡 가져오기 <span>공유 링크 · JSON · 텍스트</span></h3>
+        <p class="pc-desc">공유받은 주소를 붙여넣거나, 젤다 5음 형식의 JSON·텍스트·파일을 가져오세요.
+          텍스트 예: <code>A:1 ▼:0.5 ▶:1 ◀:1 ▲:2</code></p>
+        <div class="external-meta">
+          <label class="studio-field"><span>곡명</span>
+            <input id="ext-name" type="text" maxlength="24" placeholder="가져온 곡" />
+          </label>
+          <label class="studio-field compact"><span>빠르기</span>
+            <input id="ext-bpm" type="number" min="50" max="220" value="120" inputmode="numeric" />
+          </label>
+        </div>
+        <label class="studio-field external-data"><span>곡 데이터</span>
+          <textarea id="ext-data" rows="5" spellcheck="false"
+            placeholder="공유 URL, JSON 또는 A:1 ▼:0.5 ▶:1 ◀:1 ▲:2 형식의 음표를 붙여넣으세요."></textarea>
+        </label>
+        <div class="rec-controls external-actions">
+          <label class="big-btn file-btn" for="ext-file">📄 파일 선택</label>
+          <input id="ext-file" class="sr-only" type="file" accept=".txt,.json,text/plain,application/json" />
+          <button id="ext-preview" class="big-btn" type="button">▶ 미리듣기</button>
+          <button id="ext-add" class="big-btn gold" type="button">📥 내 노래에 추가</button>
+        </div>
+        <p id="ext-status" class="rec-status" role="status" aria-live="polite">공유 링크는 예전 형식과 새 URL-safe 형식을 모두 읽을 수 있습니다.</p>
       </div>
 
       <div class="panel-card">
