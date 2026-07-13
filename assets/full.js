@@ -121,7 +121,7 @@
 
   /* ------------------------------------------------------------- Note bus */
   const noteSubs = new Set(), endSubs = new Set();
-  const active = new Set();
+  const active = new Set(), previewActive = new Set();
   let keyboards = [];                    // every mounted keyboard root
 
   function eachKey(id, fn) {
@@ -176,13 +176,33 @@
   function endNote(id) {
     if (!active.delete(id)) return;
     api.synth.noteOff('F:' + id);
-    eachKey(id, (el) => el.classList.remove('on'));
+    if (!previewActive.has(id)) eachKey(id, (el) => el.classList.remove('on'));
     // once every key is up, let the photo's fingering linger a beat, then fade
-    if (active.size === 0) photoClearT = setTimeout(clearPhoto, 280);
+    if (active.size === 0 && previewActive.size === 0) photoClearT = setTimeout(clearPhoto, 280);
     endSubs.forEach((f) => { try { f(id); } catch (e) { /* listener error */ } });
   }
 
-  function stopAllFull() { [...active].forEach(endNote); }
+  // Cancellable preview notes power the song-name listening wheel. They share
+  // keyboard/fingering feedback but stay off the input bus and progress count.
+  function startPreview(id) {
+    if (!NOTES[id] || previewActive.has(id)) return;
+    previewActive.add(id);
+    api.synth.ensure();
+    api.synth.noteOn('FP:' + id, NOTES[id].freq);
+    eachKey(id, (el) => el.classList.add('on'));
+    updateChart(id);
+    updatePhoto(id);
+  }
+
+  function endPreview(id) {
+    if (!previewActive.delete(id)) return;
+    api.synth.noteOff('FP:' + id);
+    if (!active.has(id)) eachKey(id, (el) => el.classList.remove('on'));
+    if (active.size === 0 && previewActive.size === 0) photoClearT = setTimeout(clearPhoto, 280);
+  }
+
+  function stopPreview() { [...previewActive].forEach(endPreview); }
+  function stopAllFull() { [...active].forEach(endNote); stopPreview(); }
 
   // one-shot playback (auto-play / previews) with the same visual feedback
   function play(id, dur = 0.55) {
@@ -191,7 +211,9 @@
     api.synth.play(NOTES[id].freq, dur);
     eachKey(id, (el) => {
       el.classList.add('on');
-      setTimeout(() => { if (!active.has(id)) el.classList.remove('on'); }, Math.min(900, dur * 1000));
+      setTimeout(() => {
+        if (!active.has(id) && !previewActive.has(id)) el.classList.remove('on');
+      }, Math.min(900, dur * 1000));
     });
     updateChart(id);
     updatePhoto(id, Math.min(900, dur * 1000));
@@ -344,6 +366,7 @@
     NOTES, SEQ,
     mount,
     startNote, endNote, play,
+    startPreview, endPreview, stopPreview,
     stopAll: stopAllFull,
     isActive: (id) => active.has(id),
     onNote: (f) => { noteSubs.add(f); return () => noteSubs.delete(f); },
