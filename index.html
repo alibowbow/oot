@@ -53,9 +53,8 @@
           <span class="hit" data-hole="left"  style="left:59%;top:40%"></span>
         </div>
         <!-- full-range mode: the played note's fingering appears on the photo
-             itself — gold = hole to cover, blue ring = open. Positions come
-             from pixel analysis of the image; the two thumb holes are on the
-             back of the instrument, so only the chart shows them. -->
+             itself — gold = hole to cover, blue ring = open. The two thumb
+             holes live in a compact back-view schematic at the lower right. -->
         <div class="oca-fing" aria-hidden="true">
           <span class="fhole"     data-fhole="L1" style="left:16.7%;top:40.6%"></span>
           <span class="fhole"     data-fhole="L2" style="left:27.9%;top:34.9%"></span>
@@ -67,6 +66,16 @@
           <span class="fhole"     data-fhole="R2" style="left:66.0%;top:28.3%"></span>
           <span class="fhole"     data-fhole="R3" style="left:74.0%;top:20.3%"></span>
           <span class="fhole"     data-fhole="R4" style="left:83.0%;top:15.0%"></span>
+          <div class="oca-back">
+            <span class="oca-back-label">뒷면 <small>BACK</small></span>
+            <div class="oca-back-body">
+              <span class="oca-back-grip" aria-hidden="true"></span>
+              <span class="fhole thumb left-thumb" data-fhole="TL"></span>
+              <span class="fhole thumb right-thumb" data-fhole="TR"></span>
+              <span class="oca-back-hand left-hand">L</span>
+              <span class="oca-back-hand right-hand">R</span>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -222,10 +231,17 @@
 
       <div class="panel-card game-card" id="g-rhythm">
         <h3 class="pc-title">🎯 리듬 챌린지 <span>Rhythm Challenge</span></h3>
-        <p class="pc-desc">위에서 떨어지는 노트가 하단 판정선에 닿는 순간, 그 레인의 키를 누르세요
-          (화면 아래 키 터치 · 방향키 · <b>A</b>). Perfect ±90ms · Good ±220ms.
-          <b>랜덤 메들리</b>는 곡이 끝나면 다음 곡이 계속 이어지고, 모든 곡이 핵심 두 마디
-          뒤에 <b>이어지는 원곡 멜로디</b>까지 연주됩니다.</p>
+        <p class="pc-desc"><b>젤다 5음</b>은 레인 키·방향키·A로, <b>전체 연주</b>는 12홀 음역 건반으로
+          떨어지는 노트를 판정선에 맞춰 연주하세요. Perfect ±90ms · Good ±220ms.
+          랜덤 메들리는 곡이 끝나면 다음 곡으로 이어집니다.</p>
+        <div class="rg-mode" role="group" aria-label="리듬 챌린지 연주 모드">
+          <button id="rg-mode-zelda" class="rg-mode-btn on" type="button" aria-pressed="true">
+            <span aria-hidden="true">🗡</span> 젤다 5음 <small>원작 버튼</small>
+          </button>
+          <button id="rg-mode-full" class="rg-mode-btn" type="button" aria-pressed="false">
+            <span aria-hidden="true">🎼</span> 전체 연주 <small>12홀 음역</small>
+          </button>
+        </div>
         <div class="g-controls">
           <select id="rg-song" aria-label="곡 선택"></select>
           <button id="rg-start" class="big-btn gold">▶ 게임 시작</button>
@@ -241,6 +257,7 @@
           <div class="rg-stage" id="rg-stage">
             <div class="rg-hitline" aria-hidden="true"></div>
           </div>
+          <div id="rg-full-kb" class="rg-full-kb" hidden></div>
           <div class="rg-pop" id="rg-judge" aria-hidden="true"></div>
         </div>
         <div class="g-result" id="rg-result" hidden></div>
@@ -301,9 +318,9 @@
   <script src="assets/curriculum.js"></script>
   <script src="assets/learn.js"></script>
   <script src="assets/studio.js"></script>
-  <script src="assets/games.js"></script>
   <script src="assets/full.js"></script>
   <script src="assets/repertoire.js"></script>
+  <script src="assets/games.js"></script>
   <script src="assets/share.js"></script>
 </body>
 </html>
