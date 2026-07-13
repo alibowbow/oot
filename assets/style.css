@@ -1057,70 +1057,64 @@ body.full-on .pad, body.full-on .echo-row { display: none; }
 .full-hint { max-width: 380px; }
 
 /* repertoire ------------------------------------------------------------- */
-.instrument > .rep-listen {
-  display: none; position: absolute; z-index: 12; top: 18px; left: 18px; right: auto;
-  width: 168px; margin: 0; padding: 0; border: 0; border-radius: 12px;
+.mode-row > .rep-listen {
+  display: none; flex: 0 0 168px; width: 168px; margin: 0; padding: 0; border: 0; border-radius: 9px;
   background: none; overflow: visible;
 }
-body.listen-on .instrument > .rep-listen { display: block; }
-.instrument > .rep-listen .rg-wheel-shell {
-  height: 114px; border: 3px solid #46515a; border-radius: 9px;
+body.listen-on #mode-listen { display: none; }
+body.listen-on .mode-row > .rep-listen { display: block; }
+.mode-row > .rep-listen .rg-wheel-shell {
+  height: 66px; border: 3px solid #46515a; border-radius: 9px;
   background:
     repeating-linear-gradient(0deg, rgba(20,43,34,.055) 0 1px, transparent 1px 3px),
     linear-gradient(180deg, #b8cfb5, #91ae99 52%, #829f8f);
   box-shadow:
-    0 8px 22px rgba(0,0,0,.46),
+    0 6px 16px rgba(0,0,0,.4),
     inset 0 0 0 1px rgba(222,236,226,.48),
     inset 0 4px 10px rgba(255,255,255,.18),
     inset 0 -5px 11px rgba(24,47,39,.18);
   backdrop-filter: blur(5px);
 }
-.instrument > .rep-listen .rg-wheel-shell::before {
+.mode-row > .rep-listen .rg-wheel-shell::before {
   content: ''; position: absolute; z-index: 3; inset: 2px; border-radius: 5px; pointer-events: none;
   background: linear-gradient(125deg, rgba(255,255,255,.2), transparent 28%, transparent 72%, rgba(31,54,46,.08));
   box-shadow: inset 0 0 8px rgba(31,55,46,.18);
 }
-.instrument > .rep-listen .rg-song-wheel {
-  inset: 3px; padding: 35px 2px; color: #203b32; scrollbar-width: none;
+.mode-row > .rep-listen .rg-song-wheel {
+  inset: 3px; padding: 20px 2px; color: #203b32; scrollbar-width: none;
   -webkit-mask-image: none; mask-image: none;
 }
-.instrument > .rep-listen .rg-wheel-item {
-  position: relative; height: 38px; display: grid; grid-template-columns: 24px minmax(0, 1fr) 13px;
-  align-items: center; gap: 3px; padding: 0 7px; border: 1px solid transparent; border-radius: 2px;
+.mode-row > .rep-listen .rg-wheel-item {
+  position: relative; height: 20px; display: grid; grid-template-columns: 19px minmax(0, 1fr) 11px;
+  align-items: center; gap: 2px; padding: 0 5px; border: 1px solid transparent; border-radius: 2px;
   color: #29463c; white-space: nowrap; overflow: hidden;
   font-family: ui-monospace, "SFMono-Regular", Consolas, "Liberation Mono", monospace;
   transition: color .12s ease, opacity .12s ease, background .12s ease;
 }
-.instrument > .rep-listen .rg-wheel-item::before {
+.mode-row > .rep-listen .rg-wheel-item::before {
   content: attr(data-track); position: static; z-index: auto; width: auto; height: auto;
   color: currentColor; background: none; border: 0; border-radius: 0; box-shadow: none;
-  font-size: .58rem; font-weight: 700; letter-spacing: .03em; opacity: .72;
+  font-size: .47rem; font-weight: 700; letter-spacing: .02em; opacity: .72;
 }
-.instrument > .rep-listen .rg-wheel-item::after {
+.mode-row > .rep-listen .rg-wheel-item::after {
   content: '›'; position: static; z-index: auto; width: auto; height: auto; border-radius: 0;
   color: currentColor; background: none; box-shadow: none; opacity: .5; transform: none;
-  font-size: .8rem; line-height: 1; text-align: right;
+  font-size: .58rem; line-height: 1; text-align: right;
 }
-.instrument > .rep-listen .rg-wheel-item span {
+.mode-row > .rep-listen .rg-wheel-item span {
   position: static; z-index: auto; width: 100%; overflow: hidden; text-overflow: ellipsis;
-  font-size: .68rem; font-weight: 700; text-align: left; letter-spacing: -.035em;
+  font-size: .57rem; font-weight: 700; text-align: left; letter-spacing: -.035em;
 }
-.instrument > .rep-listen .rg-wheel-item.wheel-before {
-  opacity: .48; transform: none;
-}
-.instrument > .rep-listen .rg-wheel-item.wheel-after {
-  opacity: .48; transform: none;
-}
-.instrument > .rep-listen .rg-wheel-item.on {
+.mode-row > .rep-listen .rg-wheel-item.wheel-before,
+.mode-row > .rep-listen .rg-wheel-item.wheel-after { opacity: .48; transform: none; }
+.mode-row > .rep-listen .rg-wheel-item.on {
   color: #dff0dc; opacity: 1; transform: none;
   border-color: rgba(33,61,51,.88); background: linear-gradient(180deg, #34574b, #29483e);
   box-shadow: inset 2px 0 0 #b9d395, inset 0 1px 0 rgba(231,244,228,.12);
 }
-.instrument > .rep-listen .rg-wheel-item.on::before { color: #c9dfc5; opacity: .86; }
-.instrument > .rep-listen .rg-wheel-item.on::after { content: '▶'; color: #dff0b5; opacity: 1; font-size: .58rem; }
-.instrument > .rep-listen .rg-wheel-focus {
-  display: none;
-}
+.mode-row > .rep-listen .rg-wheel-item.on::before { color: #c9dfc5; opacity: .86; }
+.mode-row > .rep-listen .rg-wheel-item.on::after { content: '▶'; color: #dff0b5; opacity: 1; font-size: .48rem; }
+.mode-row > .rep-listen .rg-wheel-focus { display: none; }
 .rep-listen .rg-wheel-focus {
   border-color: rgba(246,198,31,.68);
   background: linear-gradient(90deg, rgba(246,198,31,.14), rgba(69,196,236,.08));
@@ -1129,7 +1123,7 @@ body.listen-on .instrument > .rep-listen { display: block; }
 .rep-listen .rg-wheel-focus span { color: var(--gold-soft); }
 .rg-song-wheel:focus-visible { outline: 2px solid #76dcf6; outline-offset: -3px; }
 @media (prefers-reduced-motion: reduce) {
-  .instrument > .rep-listen .rg-wheel-item { transition: none; }
+  .mode-row > .rep-listen .rg-wheel-item { transition: none; }
 }
 .rep-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 14px; margin-top: 14px; }
 .rep-card {
@@ -1254,7 +1248,7 @@ body.full-on .oca-fing { display: block; }
   .full-kb-wrap, .rep-kb, .l-kb { overflow-x: clip; margin-left: -8px; margin-right: -8px; }
 
   .rg-listen { padding: 14px; }
-  .instrument > .rep-listen { top: 10px; left: 8px; right: auto; width: 142px; padding: 0; }
+  .mode-row > .rep-listen { flex-basis: 142px; width: 142px; padding: 0; }
   .rg-listen-body { grid-template-columns: 1fr; gap: 14px; }
   .rg-wheel-shell { height: 176px; }
   .rg-listen-now strong { font-size: 1.12rem; }
