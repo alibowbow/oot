@@ -26,8 +26,8 @@
         const AC = window.AudioContext || window.webkitAudioContext;
         const ctx = (this.ctx = new AC());
 
-        // voices sum into bus -> limiter -> master(volume) -> destination
-        this.bus = ctx.createGain(); this.bus.gain.value = 1.0;
+        // voices sum into a +2.6 dB makeup bus -> limiter -> master(volume) -> destination
+        this.bus = ctx.createGain(); this.bus.gain.value = 1.35;
         this.limiter = ctx.createDynamicsCompressor();
         this.limiter.threshold.value = -4;
         this.limiter.knee.value = 4;
