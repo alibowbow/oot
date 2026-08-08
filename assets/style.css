@@ -1198,10 +1198,14 @@ body.listen-on .mode-row > .rep-listen { display: block; }
 .rep-card .rc-origin { font-size: .78rem; opacity: .75; margin: 6px 0 8px; }
 .rc-tabs { display: flex; flex-wrap: wrap; gap: 4px; margin: 8px 0 10px; }
 .rc-note {
-  min-width: 30px; text-align: center; padding: 3px 5px; border-radius: 6px; font-size: .78rem;
+  min-width: 30px; min-height: 30px; text-align: center; padding: 3px 5px; border-radius: 6px; font-size: .78rem;
   background: rgba(255,255,255,.55); border: 1px solid rgba(120,90,30,.3);
+  appearance: none; color: inherit; font-family: inherit; line-height: inherit; cursor: pointer; touch-action: manipulation;
 }
+.rc-note:hover { border-color: #a67811; background: rgba(255,255,255,.82); }
+.rc-note:focus-visible { outline: 2px solid #176a89; outline-offset: 2px; }
 .rc-note.sharp { background: #3a3222; color: #f3e7c9; }
+.rc-note.sharp:hover { background: #51452f; }
 .rc-note.long { border-bottom: 3px solid #a67811; }
 .rc-note.now { background: var(--gold); box-shadow: 0 0 10px rgba(246,198,31,.8); }
 .rc-note.done { opacity: .38; }
